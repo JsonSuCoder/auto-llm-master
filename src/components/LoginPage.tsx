@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Lock, Mail, Bot } from 'lucide-react';
+import { Lock, Mail, Bot, AlertCircle } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
@@ -20,21 +20,31 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     setTimeout(() => {
       if (email && password) {
         onLogin(email, password).then((res: any) => {
           setLoading(false);
           if (res.code === 200) {
-            onLoginSuccess(res.user)
+            // 保存用户信息到localStorage，设置12小时有效期
+            const expiresAt = new Date().getTime() + 12 * 60 * 60 * 1000; // 12小时后的时间戳
+            const userData = {
+              ...res.user,
+              expiresAt
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+            onLoginSuccess(res.user);
           } else {
-            // todo: 错误处理
+            setError(res.message || '登录失败，请检查账号和密码');
           }
         }).catch(err => {
           console.log(err);
+          setError('登录失败，请稍后再试');
           setLoading(false);
         });
       }
@@ -77,7 +87,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode
                     placeholder="请输入邮箱"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${error ? 'border-red-500' : ''}`}
                     required
                   />
                 </div>
@@ -93,10 +103,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode
                     placeholder={t('enterPassword', language)}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
+                    className={`pl-10 ${error ? 'border-red-500' : ''}`}
                     required
                   />
                 </div>
+                {error && (
+                  <div className="flex items-center mt-2 text-red-500 text-sm">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    <span>{error}</span>
+                  </div>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>

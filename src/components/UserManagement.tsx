@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,18 +11,34 @@ import { Switch } from './ui/switch';
 import { UserPlus, Edit, Trash2, Search, Shield, User } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { Language, t } from '../utils/translations';
+import { getUsers, createUser, updateUser, deleteUser } from '../api/user';
 
 interface UserManagementProps {
   language: Language;
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
-  const [users, setUsers] = useState([
-    { id: 1, username: 'admin', name: '系统管理员', role: 'admin', status: 'active', createdAt: '2024-01-15' },
-    { id: 2, username: 'producer1', name: '张三', role: 'producer', status: 'active', createdAt: '2024-02-01' },
-    { id: 3, username: 'producer2', name: '李四', role: 'producer', status: 'inactive', createdAt: '2024-02-15' },
-    { id: 4, username: 'producer3', name: '王五', role: 'producer', status: 'active', createdAt: '2024-03-01' }
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // 获取用户列表
+  useEffect(() => {
+    setLoading(true);
+    getUsers()
+      .then((res: any) => {
+        if (res.code === 200) {
+          setUsers(res.users || []);
+        } else {
+          toast.error(res.message || '获取用户列表失败');
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error('获取用户列表失败');
+        setLoading(false);
+      });
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -44,17 +60,34 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
       return;
     }
 
-    const user = {
-      id: users.length + 1,
+    setLoading(true);
+    createUser({
       ...newUser,
-      status: 'active',
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-
-    setUsers([...users, user]);
-    setNewUser({ username: '', name: '', role: 'producer' });
-    setIsAddDialogOpen(false);
-    toast.success(t('userAddSuccess', language));
+      email: `${newUser.username}@example.com`, // 假设邮箱格式
+      password: '123456', // 默认密码
+      status: 'active'
+    })
+      .then((res: any) => {
+        setLoading(false);
+        if (res.code === 200) {
+          // 重新获取用户列表
+          getUsers().then((res: any) => {
+            if (res.code === 200) {
+              setUsers(res.data || []);
+            }
+          });
+          setNewUser({ username: '', name: '', role: 'producer' });
+          setIsAddDialogOpen(false);
+          toast.success(t('userAddSuccess', language));
+        } else {
+          toast.error(res.message || '添加用户失败');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+        toast.error('添加用户失败');
+      });
   };
 
   const handleEditUser = (user) => {
@@ -73,30 +106,86 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
       return;
     }
 
-    setUsers(users.map(user =>
-      user.id === editingUser.id
-        ? { ...user, username: newUser.username, name: newUser.name, role: newUser.role }
-        : user
-    ));
-
-    setEditingUser(null);
-    setNewUser({ username: '', name: '', role: 'producer' });
-    setIsAddDialogOpen(false);
-    toast.success(t('userUpdateSuccess', language));
+    setLoading(true);
+    updateUser(editingUser.id, {
+      ...newUser,
+      email: `${newUser.username}@example.com`, // 假设邮箱格式
+    })
+      .then((res: any) => {
+        setLoading(false);
+        if (res.code === 200) {
+          // 重新获取用户列表
+          getUsers().then((res: any) => {
+            if (res.code === 200) {
+              setUsers(res.data || []);
+            }
+          });
+          setEditingUser(null);
+          setNewUser({ username: '', name: '', role: 'producer' });
+          setIsAddDialogOpen(false);
+          toast.success(t('userUpdateSuccess', language));
+        } else {
+          toast.error(res.message || '更新用户失败');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+        toast.error('更新用户失败');
+      });
   };
 
   const handleToggleStatus = (userId) => {
-    setUsers(users.map(user =>
-      user.id === userId
-        ? { ...user, status: user.status === 'active' ? 'inactive' : 'active' }
-        : user
-    ));
-    toast.success(t('userStatusUpdated', language));
+    const targetUser = users.find(user => user.id === userId);
+    if (!targetUser) return;
+    
+    const newStatus = targetUser.status === 'active' ? 'inactive' : 'active';
+    
+    setLoading(true);
+    updateUser(userId, { status: newStatus })
+      .then((res: any) => {
+        setLoading(false);
+        if (res.code === 200) {
+          // 重新获取用户列表
+          getUsers().then((res: any) => {
+            if (res.code === 200) {
+              setUsers(res.data || []);
+            }
+          });
+          toast.success(t('userStatusUpdated', language));
+        } else {
+          toast.error(res.message || '更新用户状态失败');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+        toast.error('更新用户状态失败');
+      });
   };
 
   const handleDeleteUser = (userId) => {
-    setUsers(users.filter(user => user.id !== userId));
-    toast.success(t('userDeleted', language));
+    setLoading(true);
+    deleteUser(userId)
+      .then((res: any) => {
+        setLoading(false);
+        if (res.code === 200) {
+          // 重新获取用户列表
+          getUsers().then((res: any) => {
+            if (res.code === 200) {
+              setUsers(res.data || []);
+            }
+          });
+          toast.success(t('userDeleted', language));
+        } else {
+          toast.error(res.message || '删除用户失败');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+        toast.error('删除用户失败');
+      });
   };
 
   const getRoleBadge = (role) => {
@@ -114,7 +203,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
   };
 
   const getStatusBadge = (status) => {
-    return status === 'active' ? (
+    return status ? (
       <Badge variant="default" className="bg-green-100 text-green-800">{t('enabled', language)}</Badge>
     ) : (
       <Badge variant="outline" className="text-gray-500">{t('disabled', language)}</Badge>
@@ -241,9 +330,9 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {getStatusBadge(user.status)}
+                        {getStatusBadge(user.is_active)}
                         <Switch
-                          checked={user.status === 'active'}
+                          checked={user.is_active}
                           onCheckedChange={() => handleToggleStatus(user.id)}
                           size="sm"
                         />

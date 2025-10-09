@@ -16,11 +16,29 @@ export default function App() {
     return (saved as Language) || 'en';
   });
 
+  // 检查用户登录状态和有效期
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      const now = new Date().getTime();
+      
+      // 检查登录是否过期
+      if (userData.expiresAt && userData.expiresAt > now) {
+        setUser(userData);
+      } else {
+        // 登录已过期，清除存储的用户信息
+        localStorage.removeItem('user');
+      }
+    }
+  }, []);
+
   const handleLogin = (userData) => {
     setUser(userData);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('user');
     setUser(null);
   };
 
