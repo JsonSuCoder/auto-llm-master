@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { LoginPage } from './components/LoginPage';
 import { MainDashboard } from './components/MainDashboard';
 import { Language } from './utils/translations';
+import { User } from './api/user';
 
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     // 从localStorage读取主题设置，默认为false（明亮模式）
     const saved = localStorage.getItem('darkMode');
@@ -33,7 +34,7 @@ export default function App() {
     }
   }, []);
 
-  const handleLogin = (userData) => {
+  const handleLogin = (userData:User) => {
     setUser(userData);
   };
 
@@ -43,7 +44,7 @@ export default function App() {
   };
 
   const toggleDarkMode = () => {
-    setIsDarkMode(prev => {
+    setIsDarkMode((prev:any) => {
       const newMode = !prev;
       localStorage.setItem('darkMode', JSON.stringify(newMode));
       return newMode;

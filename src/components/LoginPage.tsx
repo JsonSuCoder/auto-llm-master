@@ -7,13 +7,14 @@ import { Lock, Mail, Bot, AlertCircle } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
-import { onLogin } from '../api/user';
+import { onLogin, User } from '../api/user';
 
 interface LoginPageProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   language: Language;
   onToggleLanguage: () => void;
+  onLoginSuccess: (user: User) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode, onToggleDarkMode, language, onToggleLanguage }) => {

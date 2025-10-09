@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Badge } from './ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Switch } from './ui/switch';
-import { UserPlus, Edit, Trash2, Search, Shield, User } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import Card from 'antd/es/card';
+import Button from 'antd/es/button';
+import Input from 'antd/es/input';
+import Switch from 'antd/es/switch';
+import Table from 'antd/es/table';
+import Badge from 'antd/es/badge';
+import Space from 'antd/es/space';
+import Tooltip from 'antd/es/tooltip';
+import message from 'antd/lib/message';
+import { UserAddOutlined, EditOutlined, DeleteOutlined, SearchOutlined, SafetyOutlined, UserOutlined } from '@ant-design/icons';
 import { Language, t } from '../utils/translations';
 import { getUsers, createUser, updateUser, deleteUser } from '../api/user';
+import type { User } from '../api/user';
+import UserDialog from './dialog/UserDialog';
 
 interface UserManagementProps {
   language: Language;
 }
 
 export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
   // 获取用户列表
@@ -29,43 +30,45 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
         if (res.code === 200) {
           setUsers(res.users || []);
         } else {
-          toast.error(res.message || '获取用户列表失败');
+          message.error(res.message || '获取用户列表失败');
         }
         setLoading(false);
       })
       .catch(err => {
         console.error(err);
-        toast.error('获取用户列表失败');
+        message.error('获取用户列表失败');
         setLoading(false);
       });
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [newUser, setNewUser] = useState({
-    username: '',
-    name: '',
-    role: 'producer'
+  const [userData, setUserData] = useState<{
+    type: 'add' | 'edit';
+    data: User;
+  }>({
+    type: 'add',
+    data: {
+      email: '',
+      name: '',
+      role: 'producer',
+      is_active: true
+    }
   });
 
   const filteredUsers = users.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddUser = () => {
-    if (!newUser.username || !newUser.name) {
-      toast.error(t('fillCompleteInfo', language));
+    if (!userData.data.name) {
+      message.error(t('fillCompleteInfo', language));
       return;
     }
 
     setLoading(true);
     createUser({
-      ...newUser,
-      email: `${newUser.username}@example.com`, // 假设邮箱格式
-      password: '123456', // 默认密码
-      status: 'active'
+      ...userData.data,
     })
       .then((res: any) => {
         setLoading(false);
@@ -73,43 +76,43 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
           // 重新获取用户列表
           getUsers().then((res: any) => {
             if (res.code === 200) {
-              setUsers(res.data || []);
+              setUsers(res.users || []);
             }
           });
-          setNewUser({ username: '', name: '', role: 'producer' });
+          setUserData({
+            type: 'add',
+            data: { email: '', name: '', role: 'producer', is_active: true }
+          });
           setIsAddDialogOpen(false);
-          toast.success(t('userAddSuccess', language));
+          message.success(t('userAddSuccess', language));
         } else {
-          toast.error(res.message || '添加用户失败');
+          message.error(res.message || '添加用户失败');
         }
       })
       .catch(err => {
         console.error(err);
         setLoading(false);
-        toast.error('添加用户失败');
+        message.error('添加用户失败');
       });
   };
 
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setNewUser({
-      username: user.username,
-      name: user.name,
-      role: user.role
+  const handleEditUser = (user: User) => {
+    setUserData({
+      type: 'edit',
+      data: user
     });
     setIsAddDialogOpen(true);
   };
 
   const handleUpdateUser = () => {
-    if (!newUser.username || !newUser.name) {
-      toast.error(t('fillCompleteInfo', language));
+    if (!userData.data.name || !userData.data.id) {
+      message.error(t('fillCompleteInfo', language));
       return;
     }
 
     setLoading(true);
-    updateUser(editingUser.id, {
-      ...newUser,
-      email: `${newUser.username}@example.com`, // 假设邮箱格式
+    updateUser(userData.data.id, {
+      ...userData.data,
     })
       .then((res: any) => {
         setLoading(false);
@@ -117,54 +120,56 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
           // 重新获取用户列表
           getUsers().then((res: any) => {
             if (res.code === 200) {
-              setUsers(res.data || []);
+              setUsers(res.users || []);
             }
           });
-          setEditingUser(null);
-          setNewUser({ username: '', name: '', role: 'producer' });
+          setUserData({
+            type: 'add',
+            data: { email: '', name: '', role: 'producer', is_active: true }
+          });
           setIsAddDialogOpen(false);
-          toast.success(t('userUpdateSuccess', language));
+          message.success(t('userUpdateSuccess', language));
         } else {
-          toast.error(res.message || '更新用户失败');
+          message.error(res.message || '更新用户失败');
         }
       })
       .catch(err => {
         console.error(err);
         setLoading(false);
-        toast.error('更新用户失败');
+        message.error('更新用户失败');
       });
   };
 
-  const handleToggleStatus = (userId) => {
+  const handleToggleStatus = (userId: string) => {
     const targetUser = users.find(user => user.id === userId);
     if (!targetUser) return;
-    
-    const newStatus = targetUser.status === 'active' ? 'inactive' : 'active';
-    
+
+    const newStatus = targetUser.is_active ? false : true;
+
     setLoading(true);
-    updateUser(userId, { status: newStatus })
+    updateUser(userId, { ...targetUser, is_active: newStatus })
       .then((res: any) => {
         setLoading(false);
         if (res.code === 200) {
           // 重新获取用户列表
           getUsers().then((res: any) => {
             if (res.code === 200) {
-              setUsers(res.data || []);
+              setUsers(res.users || []);
             }
           });
-          toast.success(t('userStatusUpdated', language));
+          message.success(t('userStatusUpdated', language));
         } else {
-          toast.error(res.message || '更新用户状态失败');
+          message.error(res.message || '更新用户状态失败');
         }
       })
       .catch(err => {
         console.error(err);
         setLoading(false);
-        toast.error('更新用户状态失败');
+        message.error('更新用户状态失败');
       });
   };
 
-  const handleDeleteUser = (userId) => {
+  const handleDeleteUser = (userId: string) => {
     setLoading(true);
     deleteUser(userId)
       .then((res: any) => {
@@ -173,206 +178,170 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
           // 重新获取用户列表
           getUsers().then((res: any) => {
             if (res.code === 200) {
-              setUsers(res.data || []);
+              setUsers(res.users || []);
             }
           });
-          toast.success(t('userDeleted', language));
+          message.success(t('userDeleted', language));
         } else {
-          toast.error(res.message || '删除用户失败');
+          message.error(res.message || '删除用户失败');
         }
       })
       .catch(err => {
         console.error(err);
         setLoading(false);
-        toast.error('删除用户失败');
+        message.error('删除用户失败');
       });
   };
 
-  const getRoleBadge = (role) => {
+  const getRoleBadge = (role: string) => {
     return role === 'admin' ? (
-      <Badge variant="default" className="bg-red-100 text-red-800">
-        <Shield className="w-3 h-3 mr-1" />
-        {t('admin', language)}
+      <Badge color="red">
+        <Space>
+          <SafetyOutlined />
+          {t('admin', language)}
+        </Space>
       </Badge>
     ) : (
-      <Badge variant="secondary">
-        <User className="w-3 h-3 mr-1" />
-        {t('producer', language)}
+      <Badge color="blue">
+        <Space>
+          <UserOutlined />
+          {t('producer', language)}
+        </Space>
       </Badge>
     );
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: boolean) => {
     return status ? (
-      <Badge variant="default" className="bg-green-100 text-green-800">{t('enabled', language)}</Badge>
+      <Badge status="success" text={t('enabled', language)} />
     ) : (
-      <Badge variant="outline" className="text-gray-500">{t('disabled', language)}</Badge>
+      <Badge status="default" text={t('disabled', language)} />
     );
   };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            {t('userManagement', language)}
-          </CardTitle>
-          <CardDescription>
-            {t('userManagementDesc', language)}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder={language === 'zh' ? '搜索用户...' : 'Search users...'}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
-                />
-              </div>
-            </div>
-
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setEditingUser(null);
-                  setNewUser({ username: '', name: '', role: 'producer' });
-                }}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  {t('addUser', language)}
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingUser ? t('editUser', language) : t('addUser', language)}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingUser 
-                      ? (language === 'zh' ? '修改用户信息和权限' : 'Modify user information and permissions')
-                      : (language === 'zh' ? '创建新的系统用户' : 'Create a new system user')
-                    }
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="username">{t('username', language)}</Label>
-                    <Input
-                      id="username"
-                      type="email"
-                      value={newUser.username}
-                      onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                      placeholder="请输入邮箱"
-                      disabled={editingUser}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="name">{t('realName', language)}</Label>
-                    <Input
-                      id="name"
-                      value={newUser.name}
-                      onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                      placeholder={t('enterRealName', language)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">{t('role', language)}</Label>
-                    <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">{t('admin', language)}</SelectItem>
-                        <SelectItem value="producer">{t('producer', language)}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    {t('cancel', language)}
-                  </Button>
-                  <Button onClick={editingUser ? handleUpdateUser : handleAddUser}>
-                    {editingUser ? t('update', language) : t('create', language)}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+      <Card title={
+        <span className="flex items-center gap-2">
+          <SafetyOutlined />
+          {t('userManagement', language)}
+        </span>
+      }>
+        <p className="text-gray-500 mb-4">
+          {t('userManagementDesc', language)}
+        </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Input
+              placeholder={language === 'zh' ? '搜索用户...' : 'Search users...'}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              prefix={<SearchOutlined />}
+              style={{ width: 250 }}
+            />
           </div>
 
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('userInfo', language)}</TableHead>
-                  <TableHead>{t('role', language)}</TableHead>
-                  <TableHead>{t('status', language)}</TableHead>
-                  <TableHead>{t('createdAt', language)}</TableHead>
-                  <TableHead className="text-right">{t('actions', language)}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-sm text-muted-foreground">admin@gmail.com</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getRoleBadge(user.role)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(user.is_active)}
-                        <Switch
-                          checked={user.is_active}
-                          onCheckedChange={() => handleToggleStatus(user.id)}
-                          size="sm"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {user.createdAt}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={() => {
+              setUserData({
+                type: 'add',
+                data: { email: '', name: '', role: 'producer', is_active: true }
+              });
+              setIsAddDialogOpen(true);
+            }}
+          >
+            {t('addUser', language)}
+          </Button>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {t('noMatchingUsers', language)}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          <UserDialog
+            isOpen={isAddDialogOpen}
+            onClose={() => setIsAddDialogOpen(false)}
+            onSubmit={userData.type === 'edit' ? handleUpdateUser : handleAddUser}
+            type={userData.type}
+            userData={userData.data}
+            setUserData={(data) => setUserData({ ...userData, data })}
+            language={language}
+          />
+        </div>
+
+        <div className="border rounded-lg">
+          <Table
+            dataSource={filteredUsers}
+            rowKey="id"
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+            columns={[
+              {
+                title: t('userInfo', language),
+                key: 'userInfo',
+                render: (user) => (
+                  <div>
+                    <div className="font-medium">{user.name}</div>
+                    <div className="text-sm text-muted-foreground">admin@gmail.com</div>
+                  </div>
+                )
+              },
+              {
+                title: t('role', language),
+                key: 'role',
+                render: (user) => getRoleBadge(user.role)
+              },
+              {
+                title: t('status', language),
+                key: 'status',
+                render: (user) => (
+                  <div className="flex items-center gap-2">
+                    {getStatusBadge(user.is_active)}
+                    <Switch
+                      checked={user.is_active}
+                      onChange={() => handleToggleStatus(user.id)}
+                      size="small"
+                    />
+                  </div>
+                )
+              },
+              {
+                title: t('createdAt', language),
+                key: 'createdAt',
+                dataIndex: 'createdAt',
+                render: (text) => <span className="text-gray-500">{text}</span>
+              },
+              {
+                title: t('actions', language),
+                key: 'actions',
+                align: 'right',
+                render: (user) => (
+                  <Space>
+                    <Tooltip title={t('edit', language)}>
+                      <Button
+                        type="text"
+                        icon={<EditOutlined />}
+                        onClick={() => handleEditUser(user)}
+                      />
+                    </Tooltip>
+                    <Tooltip title={t('delete', language)}>
+                      <Button
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleDeleteUser(user.id)}
+                      />
+                    </Tooltip>
+                  </Space>
+                )
+              }
+            ]}
+          />
+        </div>
+
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            {t('noMatchingUsers', language)}
+          </div>
+        )}
+      </Card >
+    </div >
   );
 };

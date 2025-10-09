@@ -22,6 +22,9 @@ export const QueryTypeManagement: React.FC<QueryTypeManagementProps> = ({ langua
     {
       id: 1,
       code: 'QA001',
+      L1_SCENE_ID: 'A',
+      L2_SCENE_ID: 'T1',
+      L3_SCENE_ID: 'H1',
       name: language === 'zh' ? '机会发现' : 'Opportunity Discovery',
       secondaryScene: language === 'zh' ? '机会发现' : 'Opportunity Discovery',
       tertiaryScene: 'RWA',
@@ -43,54 +46,6 @@ export const QueryTypeManagement: React.FC<QueryTypeManagementProps> = ({ langua
       status: 'active',
       queryCount: 1250
     },
-    {
-      id: 2,
-      code: 'TD002',
-      name: language === 'zh' ? '趋势研判' : 'Trend Analysis',
-      secondaryScene: language === 'zh' ? '趋势研判' : 'Trend Analysis',
-      tertiaryScene: 'RWA',
-      sceneSummary: language === 'zh' ? '分析和判断市场发展趋势' : 'Analyze and judge market development trends',
-      description: language === 'zh' ? 'RWA市场 adoption 趋势' : 'RWA market adoption trends',
-      guidance: language === 'zh'
-        ? '生成趋势分析相关的问题，注重对市场走向的深度分析和预测，提供有价值的趋势判断。'
-        : 'Generate trend analysis questions focusing on deep market direction analysis and predictions.',
-      prompt: language === 'zh'
-        ? '请生成一个关于{topic}的趋势研判问题，包含对未来发展方向的分析。'
-        : 'Generate a trend analysis question about {topic} including analysis of future development directions.',
-      distilledPrompt: language === 'zh'
-        ? '预测{topic}趋势：基于数据分析未来6-12个月的发展方向和关键节点。'
-        : 'Predict {topic} trends: analyze future 6-12 month development directions and key milestones based on data.',
-      qualityStandard: language === 'zh'
-        ? '1. 趋势判断准确\\n2. 分析逻辑清晰\\n3. 数据支撑充分\\n4. 预测具有参考价值'
-        : '1. Accurate trend judgment\\n2. Clear analytical logic\\n3. Sufficient data support\\n4. Valuable predictions',
-      createdAt: '2024-01-20',
-      status: 'active',
-      queryCount: 890
-    },
-    {
-      id: 3,
-      code: 'DS003',
-      name: language === 'zh' ? '交易决策支持' : 'Trading Decision Support',
-      secondaryScene: language === 'zh' ? '交易决策支持' : 'Trading Decision Support',
-      tertiaryScene: 'RWA',
-      sceneSummary: language === 'zh' ? '为交易决策提供专业分析和建议' : 'Provide professional analysis and recommendations for trading decisions',
-      description: language === 'zh' ? 'RWA代币操作建议' : 'RWA token operation recommendations',
-      guidance: language === 'zh'
-        ? '生成交易决策支持相关的问题，提供具体的投资建议和风险评估，帮助做出明智的交易决策。'
-        : 'Generate trading decision support questions providing specific investment advice and risk assessment.',
-      prompt: language === 'zh'
-        ? '请生成一个关于{category}的交易决策支持问题，包含风险评估和操作建议。'
-        : 'Generate a trading decision support question about {category} including risk assessment and operational advice.',
-      distilledPrompt: language === 'zh'
-        ? '针对{category}给出交易建议：分析���格区��、入场时机、止损止盈策略。'
-        : 'Provide trading advice for {category}: analyze price ranges, entry timing, stop-loss and take-profit strategies.',
-      qualityStandard: language === 'zh'
-        ? '1. 决策建议明确\\n2. 风险评估全面\\n3. 操作指导具体\\n4. 符合风控要求'
-        : '1. Clear decision recommendations\\n2. Comprehensive risk assessment\\n3. Specific operational guidance\\n4. Risk control compliance',
-      createdAt: '2024-02-01',
-      status: 'active',
-      queryCount: 654
-    }
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
