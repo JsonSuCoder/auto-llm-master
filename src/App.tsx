@@ -52,7 +52,7 @@ export default function App() {
   if (!user) {
     return (
       <LoginPage 
-        onLogin={handleLogin} 
+        onLoginSuccess={handleLogin} 
         isDarkMode={isDarkMode} 
         onToggleDarkMode={toggleDarkMode}
         language={language}

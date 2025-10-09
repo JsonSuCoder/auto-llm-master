@@ -36,16 +36,16 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ user, onLogout, is
 
   const menuItems = [
     { id: 'home', label: t('home', language), icon: Home, permission: null },
-    { id: 'users', label: t('userManagement', language), icon: Users, permission: 'user_management' },
-    { id: 'query-types', label: t('queryTypeManagement', language), icon: Settings, permission: 'query_type_management' },
-    { id: 'query-production', label: t('queryProduction', language), icon: FileText, permission: 'query_production' },
-    { id: 'data-distillation', label: t('dataDistillation', language), icon: Database, permission: 'data_distillation' },
-    { id: 'data-annotation', label: t('dataAnnotation', language), icon: Tag, permission: 'data_annotation' },
-    { id: 'blind-evaluation', label: t('blindEvaluation', language), icon: Eye, permission: 'blind_evaluation' }
+    { id: 'users', label: t('userManagement', language), icon: Users, permission: 'admin' },
+    { id: 'query-types', label: t('queryTypeManagement', language), icon: Settings, permission: null },
+    { id: 'query-production', label: t('queryProduction', language), icon: FileText, permission: null },
+    { id: 'data-distillation', label: t('dataDistillation', language), icon: Database, permission: null },
+    { id: 'data-annotation', label: t('dataAnnotation', language), icon: Tag, permission: null },
+    { id: 'blind-evaluation', label: t('blindEvaluation', language), icon: Eye, permission: null }
   ];
 
   const filteredMenuItems = menuItems.filter(item => 
-    !item.permission || user.permissions.includes(item.permission)
+    !item.permission || user.role === item.permission
   );
 
   const handleViewDistillationResults = (taskId: number, taskName: string) => {

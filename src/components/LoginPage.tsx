@@ -7,16 +7,16 @@ import { Lock, Mail, Bot } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
+import { onLogin } from '../api/user';
 
 interface LoginPageProps {
-  onLogin: (userData: any) => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   language: Language;
   onToggleLanguage: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, isDarkMode, onToggleDarkMode, language, onToggleLanguage }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode, onToggleDarkMode, language, onToggleLanguage }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,22 +24,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, isDarkMode, onTog
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // 模拟登录验证
     setTimeout(() => {
       if (email && password) {
-        const userData = {
-          id: email === 'admin@gmail.com' ? 1 : 2,
-          username: email,
-          name: email === 'admin@gmail.com' ? t('admin', language) : t('producer', language),
-          role: email === 'admin@gmail.com' ? 'admin' : 'producer',
-          permissions: email === 'admin@gmail.com' 
-            ? ['user_management', 'query_type_management', 'query_production', 'data_distillation', 'data_annotation', 'blind_evaluation']
-            : ['query_production', 'data_distillation', 'data_annotation', 'blind_evaluation']
-        };
-        onLogin(userData);
+        onLogin(email, password).then((res: any) => {
+          setLoading(false);
+          if (res.code === 200) {
+            onLoginSuccess(res.user)
+          } else {
+            // todo: 错误处理
+          }
+        }).catch(err => {
+          console.log(err);
+          setLoading(false);
+        });
       }
-      setLoading(false);
     }, 1000);
   };
 
@@ -50,7 +48,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, isDarkMode, onTog
         <ThemeToggle isDark={isDarkMode} onToggle={onToggleDarkMode} language={language} />
         <LanguageToggle language={language} onToggle={onToggleLanguage} />
       </div>
-      
+
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full mb-4">
@@ -84,7 +82,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, isDarkMode, onTog
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">{t('password', language)}</Label>
                 <div className="relative">
