@@ -1,4 +1,4 @@
-export const SEVER_URL = "http://localhost:8000";
+import { SEVER_URL } from "./config";
 
 export type User = {
   id?: string;

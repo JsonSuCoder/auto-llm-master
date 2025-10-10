@@ -1,4 +1,4 @@
-import { title } from "process";
+import { SEVER_URL } from "./config";
 
 export const L1_SCENE = {
   A: {
@@ -55,4 +55,91 @@ export const L3_SCENE = {
   H5: {
     title: "DeFi (Decentralized Finance)",
   },
+};
+
+export interface QueryTypeItem {
+  id?: string;
+  code: string;
+  L1_SCENE_ID: string;
+  L2_SCENE_ID: string;
+  L3_SCENE_ID: string;
+  createdAt?: string;
+  description: string;
+  guidance: string;
+  prompt: string;
+  distilledPrompt: string;
+  qualityStandard: string;
+}
+export const getQueryTypes = ({ page, size }: { page: number; size: number }) => {
+  return new Promise((resolve) => {
+    fetch(`${SEVER_URL}/querytypes?page=${page}&size=${size}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        resolve(data);
+      });
+  });
+};
+
+export const getAllQueryTypes = () => {
+  return new Promise((resolve) => {
+    fetch(`${SEVER_URL}/querytypes/all`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        resolve(data);
+      });
+  });
+};
+
+export const createQueryTypes = (query: QueryTypeItem) => {
+  return new Promise((resolve) => {
+    fetch(`${SEVER_URL}/querytypes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(query),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        resolve(data);
+      });
+  });
+};
+
+export const updateQueryTypes = (queryId: string, updatedQueryData: any) => {
+  return new Promise((resolve) => {
+    fetch(`${SEVER_URL}/querytypes/${queryId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedQueryData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        resolve(data);
+      });
+  });
+};
+
+export const deleteQueryTypes = (queryId: string) => {
+  return new Promise((resolve) => {
+    fetch(`${SEVER_URL}/querytypes/${queryId}`, {
+      method: "DELETE",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        resolve(data);
+      });
+  });
 };
