@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Lock, Mail, Bot, AlertCircle } from 'lucide-react';
-import { ThemeToggle } from './ThemeToggle';
+import { Card, Button, Input, Form, Alert, Space, Typography } from 'antd';
+import { LockOutlined, MailOutlined, RobotOutlined } from '@ant-design/icons';
+// import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
 import { onLogin, User } from '../api/user';
+
+const { Title, Paragraph, Text } = Typography;
 
 interface LoginPageProps {
   isDarkMode: boolean;
@@ -17,118 +16,171 @@ interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, isDarkMode, onToggleDarkMode, language, onToggleLanguage }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export const LoginPage: React.FC<LoginPageProps> = ({
+  onLoginSuccess,
+  isDarkMode,
+  onToggleDarkMode,
+  language,
+  onToggleLanguage
+}) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (values: { email: string; password: string }) => {
     setLoading(true);
     setError('');
+
     setTimeout(() => {
-      if (email && password) {
-        onLogin(email, password).then((res: any) => {
-          setLoading(false);
-          if (res.code === 200) {
-            // 保存用户信息到localStorage，设置12小时有效期
-            const expiresAt = new Date().getTime() + 12 * 60 * 60 * 1000; // 12小时后的时间戳
-            const userData = {
-              ...res.user,
-              expiresAt
-            };
-            localStorage.setItem('user', JSON.stringify(userData));
-            onLoginSuccess(res.user);
-          } else {
-            setError(res.message || '登录失败，请检查账号和密码');
-          }
-        }).catch(err => {
-          console.log(err);
-          setError('登录失败，请稍后再试');
-          setLoading(false);
-        });
+      if (values.email && values.password) {
+        onLogin(values.email, values.password)
+          .then((res: any) => {
+            setLoading(false);
+            if (res.code === 200) {
+              // 保存用户信息到localStorage，设置12小时有效期
+              const expiresAt = new Date().getTime() + 12 * 60 * 60 * 1000; // 12小时后的时间戳
+              const userData = {
+                ...res.user,
+                expiresAt
+              };
+              localStorage.setItem('user', JSON.stringify(userData));
+              onLoginSuccess(res.user);
+            } else {
+              setError(res.message || '登录失败，请检查账号和密码');
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            setError('登录失败，请稍后再试');
+            setLoading(false);
+          });
       }
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-violet-100 dark:from-sky-900 dark:to-violet-900 flex items-center justify-center p-4 relative">
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #e0f2fe 0%, #ddd6fe 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        position: 'relative'
+      }}
+    >
       {/* 主题和语言切换按钮 - 左下角 */}
-      <div className="absolute bottom-6 left-6 space-y-2">
-        <ThemeToggle isDark={isDarkMode} onToggle={onToggleDarkMode} language={language} />
-        <LanguageToggle language={language} onToggle={onToggleLanguage} />
+      <div style={{ position: 'absolute', bottom: '24px', left: '24px' }}>
+        <Space direction="vertical" size="small">
+          {/* <ThemeToggle isDark={isDarkMode} onToggle={onToggleDarkMode} language={language} /> */}
+          <LanguageToggle language={language} onToggle={onToggleLanguage} />
+        </Space>
       </div>
 
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary text-primary-foreground rounded-full mb-4">
-            <Bot className="w-8 h-8" />
+      <div style={{ width: '100%', maxWidth: '450px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '64px',
+              height: '64px',
+              backgroundColor: '#1890ff',
+              color: 'white',
+              borderRadius: '50%',
+              marginBottom: '16px'
+            }}
+          >
+            <RobotOutlined style={{ fontSize: '32px' }} />
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{t('loginTitle', language)}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('loginSubtitle', language)}</p>
+          <Title level={2} style={{ marginBottom: '8px' }}>
+            {t('loginTitle', language)}
+          </Title>
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            {t('loginSubtitle', language)}
+          </Paragraph>
         </div>
 
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>{t('login', language)}</CardTitle>
-            <CardDescription>
-              {t('loginDescription', language)}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('username', language)}</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="请输入邮箱"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`pl-10 ${error ? 'border-red-500' : ''}`}
-                    required
-                  />
-                </div>
-              </div>
+        <Card
+          style={{
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+            borderRadius: '8px'
+          }}
+        >
+          <Title level={4} style={{ marginBottom: '8px' }}>
+            {t('login', language)}
+          </Title>
+          <Paragraph type="secondary" style={{ marginBottom: '24px' }}>
+            {t('loginDescription', language)}
+          </Paragraph>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('password', language)}</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder={t('enterPassword', language)}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 ${error ? 'border-red-500' : ''}`}
-                    required
-                  />
-                </div>
-                {error && (
-                  <div className="flex items-center mt-2 text-red-500 text-sm">
-                    <AlertCircle className="w-4 h-4 mr-1" />
-                    <span>{error}</span>
-                  </div>
-                )}
-              </div>
+          <Form onFinish={handleLogin} layout="vertical" size="large">
+            <Form.Item
+              label={t('username', language)}
+              name="email"
+              rules={[
+                { required: true, message: language === 'zh' ? '请输入邮箱' : 'Please enter email' },
+                { type: 'email', message: language === 'zh' ? '请输入有效的邮箱地址' : 'Please enter a valid email' }
+              ]}
+            >
+              <Input
+                prefix={<MailOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
+                placeholder="请输入邮箱"
+                status={error ? 'error' : ''}
+              />
+            </Form.Item>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+            <Form.Item
+              label={t('password', language)}
+              name="password"
+              rules={[{ required: true, message: t('enterPassword', language) }]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: 'rgba(0,0,0,.25)' }} />}
+                placeholder={t('enterPassword', language)}
+                status={error ? 'error' : ''}
+              />
+            </Form.Item>
+
+            {error && (
+              <Alert
+                message={error}
+                type="error"
+                showIcon
+                closable
+                onClose={() => setError('')}
+                style={{ marginBottom: '16px' }}
+              />
+            )}
+
+            <Form.Item style={{ marginBottom: 0 }}>
+              <Button type="primary" htmlType="submit" loading={loading} block>
                 {loading ? t('loggingIn', language) : t('loginButton', language)}
               </Button>
-            </form>
+            </Form.Item>
+          </Form>
 
-            <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('testAccounts', language)}</p>
-              <div className="text-xs space-y-1">
-                <p><strong>{t('admin', language)}：</strong> admin@gmail.com / {t('anyPassword', language)}</p>
-                <p><strong>{t('producer', language)}：</strong> producer@gmail.com / {t('anyPassword', language)}</p>
+          <div
+            style={{
+              marginTop: '24px',
+              padding: '16px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px'
+            }}
+          >
+            <Text type="secondary" style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+              {t('testAccounts', language)}
+            </Text>
+            <div style={{ fontSize: '12px' }}>
+              <div style={{ marginBottom: '4px' }}>
+                <Text strong>{t('admin', language)}：</Text> admin@gmail.com / {t('anyPassword', language)}
+              </div>
+              <div>
+                <Text strong>{t('producer', language)}：</Text> producer@gmail.com / {t('anyPassword', language)}
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>

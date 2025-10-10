@@ -220,7 +220,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-[24px]">
       <Card title={
         <span className="flex items-center gap-2">
           <SafetyOutlined />
@@ -266,75 +266,73 @@ export const UserManagement: React.FC<UserManagementProps> = ({ language }) => {
           />
         </div>
 
-        <div className="border rounded-lg">
-          <Table
-            dataSource={filteredUsers}
-            rowKey="id"
-            loading={loading}
-            pagination={{ pageSize: 10 }}
-            columns={[
-              {
-                title: t('userInfo', language),
-                key: 'userInfo',
-                render: (user) => (
-                  <div>
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-muted-foreground">admin@gmail.com</div>
-                  </div>
-                )
-              },
-              {
-                title: t('role', language),
-                key: 'role',
-                render: (user) => getRoleBadge(user.role)
-              },
-              {
-                title: t('status', language),
-                key: 'status',
-                render: (user) => (
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(user.is_active)}
-                    <Switch
-                      checked={user.is_active}
-                      onChange={() => handleToggleStatus(user.id)}
-                      size="small"
+        <Table
+          dataSource={filteredUsers}
+          rowKey="id"
+          loading={loading}
+          pagination={{ pageSize: 10 }}
+          columns={[
+            {
+              title: t('userInfo', language),
+              key: 'userInfo',
+              render: (user) => (
+                <div>
+                  <div className="font-medium">{user.name}</div>
+                  <div className="text-sm text-muted-foreground">admin@gmail.com</div>
+                </div>
+              )
+            },
+            {
+              title: t('role', language),
+              key: 'role',
+              render: (user) => getRoleBadge(user.role)
+            },
+            {
+              title: t('status', language),
+              key: 'status',
+              render: (user) => (
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(user.is_active)}
+                  <Switch
+                    checked={user.is_active}
+                    onChange={() => handleToggleStatus(user.id)}
+                    size="small"
+                  />
+                </div>
+              )
+            },
+            {
+              title: t('createdAt', language),
+              key: 'createdAt',
+              dataIndex: 'createdAt',
+              render: (text) => <span className="text-gray-500">{text}</span>
+            },
+            {
+              title: t('actions', language),
+              key: 'actions',
+              align: 'right',
+              render: (user) => (
+                <Space>
+                  <Tooltip title={t('edit', language)}>
+                    <Button
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={() => handleEditUser(user)}
                     />
-                  </div>
-                )
-              },
-              {
-                title: t('createdAt', language),
-                key: 'createdAt',
-                dataIndex: 'createdAt',
-                render: (text) => <span className="text-gray-500">{text}</span>
-              },
-              {
-                title: t('actions', language),
-                key: 'actions',
-                align: 'right',
-                render: (user) => (
-                  <Space>
-                    <Tooltip title={t('edit', language)}>
-                      <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        onClick={() => handleEditUser(user)}
-                      />
-                    </Tooltip>
-                    <Tooltip title={t('delete', language)}>
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => handleDeleteUser(user.id)}
-                      />
-                    </Tooltip>
-                  </Space>
-                )
-              }
-            ]}
-          />
-        </div>
+                  </Tooltip>
+                  <Tooltip title={t('delete', language)}>
+                    <Button
+                      type="text"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleDeleteUser(user.id)}
+                    />
+                  </Tooltip>
+                </Space>
+              )
+            }
+          ]}
+        />
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">

@@ -178,7 +178,7 @@ export const QueryTypeManagement: React.FC<QueryTypeManagementProps> = ({ langua
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-[24px]">
       <Card title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <SettingOutlined style={{ fontSize: '18px' }} />

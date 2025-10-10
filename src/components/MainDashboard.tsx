@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from './ui/sidebar';
-import { Button } from './ui/button';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { 
-  Users, Settings, FileText, Database, Tag, Eye,
-  LogOut, Bot, Home, ChevronRight
-} from 'lucide-react';
+import { Layout, Menu, Button, Avatar, Space, Typography } from 'antd';
+import {
+  UserOutlined,
+  SettingOutlined,
+  FileTextOutlined,
+  DatabaseOutlined,
+  TagOutlined,
+  EyeOutlined,
+  LogoutOutlined,
+  RobotOutlined,
+  HomeOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined
+} from '@ant-design/icons';
 import { UserManagement } from './UserManagement';
 import { QueryTypeManagement } from './QueryTypeManagement';
 import { QueryProduction } from './QueryProduction';
@@ -14,9 +21,12 @@ import { DataAnnotation } from './DataAnnotation';
 import { BlindEvaluation } from './BlindEvaluation';
 import { DashboardHome } from './DashboardHome';
 import { DistillationResults } from './DistillationResults';
-import { ThemeToggle } from './ThemeToggle';
+// import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
+
+const { Header, Sider, Content } = Layout;
+const { Text } = Typography;
 
 interface MainDashboardProps {
   user: any;
@@ -27,26 +37,32 @@ interface MainDashboardProps {
   onToggleLanguage: () => void;
 }
 
-export const MainDashboard: React.FC<MainDashboardProps> = ({ user, onLogout, isDarkMode, onToggleDarkMode, language, onToggleLanguage }) => {
+export const MainDashboard: React.FC<MainDashboardProps> = ({
+  user,
+  onLogout,
+  isDarkMode,
+  onToggleDarkMode,
+  language,
+  onToggleLanguage
+}) => {
   const [activeTab, setActiveTab] = useState('home');
+  const [collapsed, setCollapsed] = useState(false);
   const [distillationResultsData, setDistillationResultsData] = useState<{
     taskId: number;
     taskName: string;
   } | null>(null);
 
   const menuItems = [
-    { id: 'home', label: t('home', language), icon: Home, permission: null },
-    { id: 'users', label: t('userManagement', language), icon: Users, permission: 'admin' },
-    { id: 'query-types', label: t('queryTypeManagement', language), icon: Settings, permission: null },
-    { id: 'query-production', label: t('queryProduction', language), icon: FileText, permission: null },
-    { id: 'data-distillation', label: t('dataDistillation', language), icon: Database, permission: null },
-    { id: 'data-annotation', label: t('dataAnnotation', language), icon: Tag, permission: null },
-    { id: 'blind-evaluation', label: t('blindEvaluation', language), icon: Eye, permission: null }
+    { key: 'home', label: t('home', language), icon: <HomeOutlined />, permission: null },
+    { key: 'users', label: t('userManagement', language), icon: <UserOutlined />, permission: 'admin' },
+    { key: 'query-types', label: t('queryTypeManagement', language), icon: <SettingOutlined />, permission: null },
+    { key: 'query-production', label: t('queryProduction', language), icon: <FileTextOutlined />, permission: null },
+    { key: 'data-distillation', label: t('dataDistillation', language), icon: <DatabaseOutlined />, permission: null },
+    { key: 'data-annotation', label: t('dataAnnotation', language), icon: <TagOutlined />, permission: null },
+    { key: 'blind-evaluation', label: t('blindEvaluation', language), icon: <EyeOutlined />, permission: null }
   ];
 
-  const filteredMenuItems = menuItems.filter(item => 
-    !item.permission || user.role === item.permission
-  );
+  const filteredMenuItems = menuItems.filter(item => !item.permission || user.role === item.permission);
 
   const handleViewDistillationResults = (taskId: number, taskName: string) => {
     setDistillationResultsData({ taskId, taskName });
@@ -76,7 +92,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ user, onLogout, is
         return <BlindEvaluation language={language} />;
       case 'distillation-results':
         return distillationResultsData ? (
-          <DistillationResults 
+          <DistillationResults
             language={language}
             taskId={distillationResultsData.taskId}
             taskName={distillationResultsData.taskName}
@@ -91,82 +107,164 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({ user, onLogout, is
   };
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <Sidebar className="border-r">
-          <SidebarHeader className="border-b p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-lg">
-                <Bot className="w-4 h-4" />
-              </div>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        style={{
+          overflow: 'auto',
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0
+        }}
+      >
+        {/* Logo Section */}
+        <div
+          style={{
+            height: '64px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+            padding: collapsed ? '0' : '0 24px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          }}
+        >
+          <Space size="middle">
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: '#1890ff',
+                color: 'white',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <RobotOutlined style={{ fontSize: '16px' }} />
+            </div>
+            {!collapsed && (
               <div>
-                <h2 className="font-semibold">{language === 'zh' ? '微调系统' : 'Fine-tuning System'}</h2>
-                <p className="text-xs text-muted-foreground">V1.0</p>
+                <div style={{ color: 'white', fontWeight: 600, fontSize: '14px' }}>
+                  {language === 'zh' ? '微调系统' : 'Fine-tuning System'}
+                </div>
+                <div style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '12px' }}>V1.0</div>
               </div>
-            </div>
-          </SidebarHeader>
+            )}
+          </Space>
+        </div>
 
-          <SidebarContent className="p-2">
-            <SidebarMenu>
-              {filteredMenuItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => setActiveTab(item.id)}
-                    isActive={activeTab === item.id}
-                    className="w-full justify-start"
-                  >
-                    <item.icon className="w-4 h-4 mr-3" />
-                    {item.label}
-                    {activeTab === item.id && <ChevronRight className="w-4 h-4 ml-auto" />}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarContent>
+        {/* Menu */}
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[activeTab]}
+          items={filteredMenuItems}
+          onClick={({ key }) => setActiveTab(key)}
+          style={{ borderRight: 0 }}
+        />
 
-          <SidebarFooter className="border-t p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {user.role === 'admin' ? t('admin', language) : t('producer', language)}
-                </p>
-              </div>
+        {/* Footer Section */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            width: '100%',
+            padding: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: '#001529'
+          }}
+        >
+          {!collapsed && (
+            <div style={{ marginBottom: '12px' }}>
+              <Space>
+                <Avatar style={{ backgroundColor: '#1890ff' }}>
+                  {user.name.charAt(0)}
+                </Avatar>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: 'white', fontSize: '14px', fontWeight: 500 }}>
+                    {user.name}
+                  </div>
+                  <div style={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '12px' }}>
+                    {user.role === 'admin' ? t('admin', language) : t('producer', language)}
+                  </div>
+                </div>
+              </Space>
             </div>
-            <div className="space-y-2">
-              <ThemeToggle isDark={isDarkMode} onToggle={onToggleDarkMode} language={language} />
+          )}
+
+          {!collapsed && (
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              {/* <ThemeToggle isDark={isDarkMode} onToggle={onToggleDarkMode} language={language} /> */}
               <LanguageToggle language={language} onToggle={onToggleLanguage} />
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
                 onClick={onLogout}
-                className="w-full justify-start"
+                style={{ width: '100%', justifyContent: 'flex-start', color: 'white' }}
               >
-                <LogOut className="w-4 h-4 mr-2" />
                 {t('logout', language)}
               </Button>
-            </div>
-          </SidebarFooter>
-        </Sidebar>
+            </Space>
+          )}
 
-        <div className="flex-1 flex flex-col">
-          <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-            <div className="flex h-14 items-center px-4 gap-4">
-              <SidebarTrigger />
-              <h1 className="font-semibold">
-                {filteredMenuItems.find(item => item.id === activeTab)?.label || t('home', language)}
-              </h1>
+          {collapsed && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <Avatar style={{ backgroundColor: '#1890ff' }}>
+                {user.name.charAt(0)}
+              </Avatar>
+              <Button
+                type="text"
+                icon={<LogoutOutlined />}
+                onClick={onLogout}
+                style={{ color: 'white' }}
+              />
             </div>
-          </header>
-
-          <main className="flex-1 p-6 bg-gray-50/50 dark:bg-gray-900/50">
-            {renderContent()}
-          </main>
+          )}
         </div>
-      </div>
-    </SidebarProvider>
+      </Sider>
+
+      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'all 0.2s' }}>
+        <Header
+          style={{
+            padding: '0 24px',
+            background: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid #f0f0f0',
+            position: 'sticky',
+            top: 0,
+            zIndex: 1
+          }}
+        >
+          <Space>
+            <Button
+              type="text"
+              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+              onClick={() => setCollapsed(!collapsed)}
+              style={{ fontSize: '16px', width: 64, height: 64 }}
+            />
+            <Text strong style={{ fontSize: '16px' }}>
+              {filteredMenuItems.find(item => item.key === activeTab)?.label || t('home', language)}
+            </Text>
+          </Space>
+        </Header>
+
+        <Content
+          style={{
+            margin: 0,
+            minHeight: 280,
+            background: '#f0f2f5'
+          }}
+        >
+          {renderContent()}
+        </Content>
+      </Layout>
+    </Layout>
   );
 };

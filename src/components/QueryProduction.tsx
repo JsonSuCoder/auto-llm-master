@@ -332,7 +332,7 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className='p-[24px] flex flex-col gap-[24px]'>
       {/* 类型选择和信息展示 */}
       <Card title={
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

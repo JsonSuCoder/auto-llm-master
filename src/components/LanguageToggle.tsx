@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from './ui/button';
-import { Languages } from 'lucide-react';
+import { Button } from 'antd';
+import { GlobalOutlined } from '@ant-design/icons';
 import { Language, t } from '../utils/translations';
 
 interface LanguageToggleProps {
@@ -11,13 +11,14 @@ interface LanguageToggleProps {
 export const LanguageToggle: React.FC<LanguageToggleProps> = ({ language, onToggle }) => {
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      type="text"
+      className='!text-white'
+      size="middle"
       onClick={onToggle}
-      className="w-full justify-start"
+      style={{ width: '100%', justifyContent: 'flex-start' }}
       title={t('language', language)}
+      icon={<GlobalOutlined />}
     >
-      <Languages className="w-4 h-4 mr-2" />
       {language === 'zh' ? t('english', language) : t('chinese', language)}
     </Button>
   );
