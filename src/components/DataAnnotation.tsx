@@ -1,29 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-
-import { Badge } from './ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-
-import { Progress } from './ui/progress';
-import { Checkbox } from './ui/checkbox';
-import { 
-  Tag, Play, Pause, Download, Eye, Trash2,
-  Clock, CheckCircle, AlertCircle, RefreshCw
-} from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import React, { useState } from 'react';
+import {
+  Card,
+  Button,
+  Table,
+  Progress,
+  Tag,
+  Space,
+  Typography,
+  message as antdMessage
+} from 'antd';
+import {
+  TagOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  SyncOutlined
+} from '@ant-design/icons';
 import { Language, t } from '../utils/translations';
 import { AnnotationResults } from './AnnotationResults';
 
+const { Title, Text, Paragraph } = Typography;
+
 interface DataAnnotationProps {
   language: Language;
+}
+
+interface Task {
+  id: number;
+  name: string;
+  type: string;
+  status: string;
+  progress: number;
+  queryCount: number;
+  annotatedCount: number;
+  startTime: string | null;
+  endTime: string | null;
+  estimatedTime: number | null;
+  error: string | null;
+  uploadedFiles: string[];
 }
 
 export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
   const [currentView, setCurrentView] = useState<'main' | 'results'>('main');
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [selectedTaskName, setSelectedTaskName] = useState<string>('');
-  const [tasks, setTasks] = useState([
+  const [tasks, setTasks] = useState<Task[]>([
     {
       id: 1,
       name: language === 'zh' ? '机会发现标注任务01' : 'Opportunity Discovery Annotation Task 01',
@@ -82,8 +107,6 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
     }
   ]);
 
-
-
   const handleTaskAction = (taskId: number, action: string) => {
     if (action === 'start') {
       // 对于待开始的任务，直接跳转到标注结果页面
@@ -98,10 +121,10 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
       if (task.id === taskId) {
         switch (action) {
           case 'start':
-            return { 
-              ...task, 
-              status: 'running', 
-              startTime: new Date().toLocaleString() 
+            return {
+              ...task,
+              status: 'running',
+              startTime: new Date().toLocaleString()
             };
           case 'pause':
             return { ...task, status: 'paused' };
@@ -114,49 +137,43 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
         }
       }
       return task;
-    }).filter(Boolean));
+    }).filter(Boolean) as Task[]);
 
     if (action === 'delete') {
-      toast.success(language === 'zh' ? '任务已删除' : 'Task deleted');
+      antdMessage.success(language === 'zh' ? '任务已删除' : 'Task deleted');
     } else {
-      toast.success(language === 'zh' ? '操作成功' : 'Operation successful');
+      antdMessage.success(language === 'zh' ? '操作成功' : 'Operation successful');
     }
   };
 
-
-
-  const getStatusBadge = (status: string) => {
+  const getStatusTag = (status: string) => {
     switch (status) {
       case 'completed':
         return (
-          <Badge variant="default" className="bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
+          <Tag icon={<CheckCircleOutlined />} color="success">
             {t('completed', language)}
-          </Badge>
+          </Tag>
         );
       case 'running':
         return (
-          <Badge variant="default" className="bg-blue-100 text-blue-800">
-            <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+          <Tag icon={<SyncOutlined spin />} color="processing">
             {t('running', language)}
-          </Badge>
+          </Tag>
         );
       case 'paused':
         return (
-          <Badge variant="outline">
-            <Pause className="w-3 h-3 mr-1" />
+          <Tag icon={<PauseCircleOutlined />} color="warning">
             {t('paused', language)}
-          </Badge>
+          </Tag>
         );
       case 'pending':
         return (
-          <Badge variant="outline">
-            <Clock className="w-3 h-3 mr-1" />
+          <Tag icon={<ClockCircleOutlined />} color="default">
             {t('waiting', language)}
-          </Badge>
+          </Tag>
         );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Tag>{status}</Tag>;
     }
   };
 
@@ -183,157 +200,155 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
     );
   }
 
+  const columns = [
+    {
+      title: t('taskInfo', language),
+      dataIndex: 'name',
+      key: 'name',
+      render: (_: any, record: Task) => (
+        <div>
+          <div style={{ fontWeight: 500 }}>T10H1</div>
+          <div style={{ fontSize: '12px', color: '#666' }}>
+            机会发现 • {record.queryCount} {language === 'zh' ? '条Query' : 'Queries'}
+          </div>
+          {record.error && (
+            <div style={{ fontSize: '11px', color: '#ff4d4f', marginTop: '4px' }}>
+              {language === 'zh' ? '错误：' : 'Error: '}{record.error}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: t('progress', language),
+      key: 'progress',
+      render: (_: any, record: Task) => (
+        <div style={{ width: '120px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
+            <span>{record.annotatedCount}/{record.queryCount}</span>
+            <span>{record.progress.toFixed(0)}%</span>
+          </div>
+          <Progress percent={record.progress} size="small" />
+          {record.estimatedTime && (
+            <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+              {t('estimatedRemaining', language, { minutes: record.estimatedTime.toString() })}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: language === 'zh' ? '标注状态' : 'Annotation Status',
+      key: 'status',
+      render: (_: any, record: Task) => getStatusTag(record.status)
+    },
+    {
+      title: t('timeInfo', language),
+      key: 'time',
+      render: (_: any, record: Task) => (
+        <div style={{ fontSize: '12px', color: '#666' }}>
+          {record.startTime && (
+            <div>{t('startTime', language, { time: record.startTime })}</div>
+          )}
+          {record.endTime && (
+            <div>{t('endTime', language, { time: record.endTime })}</div>
+          )}
+        </div>
+      )
+    },
+    {
+      title: t('actions', language),
+      key: 'actions',
+      align: 'right' as const,
+      render: (_: any, record: Task) => (
+        <Space size="small">
+          {record.status === 'pending' && (
+            <Button
+              type="text"
+              icon={<PlayCircleOutlined />}
+              onClick={() => handleTaskAction(record.id, 'start')}
+            />
+          )}
+          {record.status === 'running' && (
+            <Button
+              type="text"
+              icon={<PlayCircleOutlined />}
+              onClick={() => handleViewResults(record.id, record.type)}
+            />
+          )}
+          {record.status === 'paused' && (
+            <Button
+              type="text"
+              icon={<PlayCircleOutlined />}
+              onClick={() => handleTaskAction(record.id, 'resume')}
+            />
+          )}
+          {record.status === 'completed' && (
+            <>
+              <Button
+                type="text"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewResults(record.id, record.type)}
+              />
+              <Button
+                type="text"
+                icon={<DownloadOutlined />}
+                onClick={() => {
+                  antdMessage.success(language === 'zh' ? '正在下载结果...' : 'Downloading results...');
+                }}
+              />
+            </>
+          )}
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleTaskAction(record.id, 'delete')}
+          />
+        </Space>
+      )
+    }
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* 创建新任务 */}
-      <Card>
-        <CardHeader className="p-[24px]">
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="w-5 h-5" />
-            {t('dataAnnotationTitle', language)}
-          </CardTitle>
-          <CardDescription>
-            {language === 'zh' 
+    <div style={{ padding: '24px' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* 标题区域 */}
+        <Card>
+          <div style={{ marginBottom: '8px' }}>
+            <Title level={4} style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TagOutlined />
+              {t('dataAnnotationTitle', language)}
+            </Title>
+          </div>
+          <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+            {language === 'zh'
               ? '管理和查看数据标注任务进度'
               : 'Manage and view data annotation task progress'
             }
-          </CardDescription>
-        </CardHeader>
-      </Card>
+          </Paragraph>
+        </Card>
 
-      {/* 任务列表 */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{language === 'zh' ? '标注任务列表' : 'Annotation Task List'}</CardTitle>
-          <CardDescription>
-            {language === 'zh' ? '管理和监控标注任务进度' : 'Manage and monitor annotation task progress'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('taskInfo', language)}</TableHead>
-                  <TableHead>{t('progress', language)}</TableHead>
-                  <TableHead>{language === 'zh' ? '标注状态' : 'Annotation Status'}</TableHead>
-                  <TableHead>{t('timeInfo', language)}</TableHead>
-                  <TableHead className="text-right">{t('actions', language)}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tasks.map((task) => (
-                  <TableRow key={task.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">T10H1</div>
-                        <div className="text-sm text-muted-foreground">
-                          机会发现 • {task.queryCount} {language === 'zh' ? '条Query' : 'Queries'}
-                        </div>
-                        {task.error && (
-                          <div className="text-xs text-red-600 mt-1">
-                            {language === 'zh' ? '错误：' : 'Error: '}{task.error}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>{task.annotatedCount}/{task.queryCount}</span>
-                          <span>{task.progress.toFixed(0)}%</span>
-                        </div>
-                        <Progress value={task.progress} className="w-24" />
-                        {task.estimatedTime && (
-                          <div className="text-xs text-muted-foreground">
-                            {language === 'zh' ? `预计剩余 ${task.estimatedTime} 分钟` : `Estimated ${task.estimatedTime} min remaining`}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(task.status)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {task.startTime && (
-                        <div>{language === 'zh' ? '开始：' : 'Start: '}{task.startTime}</div>
-                      )}
-                      {task.endTime && (
-                        <div>{language === 'zh' ? '结束：' : 'End: '}{task.endTime}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {task.status === 'pending' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTaskAction(task.id, 'start')}
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {task.status === 'running' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewResults(task.id, task.type)}
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {task.status === 'paused' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTaskAction(task.id, 'resume')}
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {task.status === 'completed' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewResults(task.id, task.type)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        )}
-                        {task.status === 'completed' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              toast.success(language === 'zh' ? '正在下载结果...' : 'Downloading results...');
-                            }}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleTaskAction(task.id, 'delete')}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {tasks.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {language === 'zh' ? '暂无标注任务' : 'No annotation tasks'}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* 任务列表 */}
+        <Card
+          title={language === 'zh' ? '标注任务列表' : 'Annotation Task List'}
+          extra={
+            <Text type="secondary">
+              {language === 'zh' ? '管理和监控标注任务进度' : 'Manage and monitor annotation task progress'}
+            </Text>
+          }
+        >
+          <Table
+            columns={columns}
+            dataSource={tasks}
+            rowKey="id"
+            pagination={false}
+            locale={{
+              emptyText: language === 'zh' ? '暂无标注任务' : 'No annotation tasks'
+            }}
+          />
+        </Card>
+      </Space>
     </div>
   );
 };

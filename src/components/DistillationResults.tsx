@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { ScrollArea } from './ui/scroll-area';
-import { Badge } from './ui/badge';
-import { ArrowLeft, Download } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
-import { Language, t } from '../utils/translations';
+import { Card, Button, Table, Modal, Tag, Space, Typography, message } from 'antd';
+import { ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons';
+import { Language } from '../utils/translations';
+
+const { Title, Text, Paragraph } = Typography;
 
 interface DistillationResultsProps {
   language: Language;
@@ -16,47 +12,55 @@ interface DistillationResultsProps {
   onBack: () => void;
 }
 
-export const DistillationResults: React.FC<DistillationResultsProps> = ({ 
-  language, 
-  taskId, 
-  taskName, 
-  onBack 
+interface Result {
+  id: number;
+  query: string;
+  analysis: string;
+  distillationStatus: string;
+  annotationStatus: string;
+}
+
+export const DistillationResults: React.FC<DistillationResultsProps> = ({
+  language,
+  taskId,
+  taskName,
+  onBack
 }) => {
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  const [selectedDetail, setSelectedDetail] = useState<{query: string, analysis: string, distillationStatus: string, annotationStatus: string} | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<Result | null>(null);
 
-  const handleShowDetails = (result: {query: string, analysis: string, distillationStatus: string, annotationStatus: string}) => {
+  const handleShowDetails = (result: Result) => {
     setSelectedDetail(result);
     setIsDetailDialogOpen(true);
   };
 
-  const getDistillationStatusBadge = (status: string) => {
+  const getDistillationStatusTag = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-100 text-green-800">{language === 'zh' ? '已完成' : 'Completed'}</Badge>;
+        return <Tag color="success">{language === 'zh' ? '已完成' : 'Completed'}</Tag>;
       case 'processing':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">{language === 'zh' ? '处理中' : 'Processing'}</Badge>;
+        return <Tag color="processing">{language === 'zh' ? '处理中' : 'Processing'}</Tag>;
       case 'pending':
-        return <Badge variant="outline">{language === 'zh' ? '待处理' : 'Pending'}</Badge>;
+        return <Tag color="default">{language === 'zh' ? '待处理' : 'Pending'}</Tag>;
       case 'failed':
-        return <Badge variant="destructive">{language === 'zh' ? '失败' : 'Failed'}</Badge>;
+        return <Tag color="error">{language === 'zh' ? '失败' : 'Failed'}</Tag>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Tag>{status}</Tag>;
     }
   };
 
-  const getAnnotationStatusBadge = (status: string) => {
+  const getAnnotationStatusTag = (status: string) => {
     switch (status) {
       case 'completed':
-        return <Badge variant="default" className="bg-green-100 text-green-800">{language === 'zh' ? '已标注' : 'Annotated'}</Badge>;
+        return <Tag color="success">{language === 'zh' ? '已标注' : 'Annotated'}</Tag>;
       case 'pending':
-        return <Badge variant="outline">{language === 'zh' ? '待标注' : 'Pending'}</Badge>;
+        return <Tag color="default">{language === 'zh' ? '待标注' : 'Pending'}</Tag>;
       case 'in_review':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">{language === 'zh' ? '审核中' : 'In Review'}</Badge>;
+        return <Tag color="processing">{language === 'zh' ? '审核中' : 'In Review'}</Tag>;
       case 'not_required':
-        return <Badge variant="secondary">{language === 'zh' ? '无需标注' : 'Not Required'}</Badge>;
+        return <Tag color="default">{language === 'zh' ? '无需标注' : 'Not Required'}</Tag>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Tag>{status}</Tag>;
     }
   };
 
@@ -79,7 +83,7 @@ Step 6: Assess Ecosystem Vitality, Development, and Governance
 Evaluate the project's long-term viability by examining development activity (active developers, external PRs, release cadence), integration velocity (announcement-to-production deployment time, hackathon-to-mainnet conversion), and ecosystem self-drive (external proposals, grant conversion rates, redundancy in key positions). Analyze TVL quality (native vs. mercenary capital), cross-chain inflows, and governance decentralization (multisig, timelock, audit status). Identify green flags (e.g., passive integration growth, stable release rhythm) and red flags (e.g., logo wall without production integrations, single-point control). This comprehensive ecosystem assessment provides insight into the project's capacity for sustained innovation, resilience, and organic expansion beyond initial hype cycles.`;
 
   // Mock distillation results data
-  const distillationResults = {
+  const distillationResults: Record<number, Result[]> = {
     1: [
       {
         id: 1,
@@ -134,170 +138,201 @@ Evaluate the project's long-term viability by examining development activity (ac
     link.href = URL.createObjectURL(blob);
     link.download = `distillation-results-${taskName.replace(/\s+/g, '-').toLowerCase()}.csv`;
     link.click();
-    
-    toast(language === 'zh' ? '导出成功' : 'Export successful');
+
+    message.success(language === 'zh' ? '导出成功' : 'Export successful');
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={onBack} className="p-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1>{language === 'zh' ? '蒸馏结果' : 'Distillation Results'}</h1>
-            <p className="text-muted-foreground">
-              {language === 'zh' ? `任务：${taskName}` : `Task: ${taskName}`}
-            </p>
-          </div>
+  const columns = [
+    {
+      title: language === 'zh' ? 'Query' : 'Query',
+      dataIndex: 'query',
+      key: 'query',
+      width: '33%',
+      ellipsis: true,
+      render: (text: string, record: Result) => (
+        <div
+          style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+          className="hover:bg-gray-100"
+          onClick={() => handleShowDetails(record)}
+          title={language === 'zh' ? '点击查看详情' : 'Click to view details'}
+        >
+          <Text ellipsis>{text}</Text>
         </div>
-        <Button onClick={handleDownload} className="flex items-center space-x-2">
-          <Download className="h-4 w-4" />
-          <span>{language === 'zh' ? '导出结果' : 'Export Results'}</span>
+      )
+    },
+    {
+      title: language === 'zh' ? '分析结果' : 'Analysis',
+      dataIndex: 'analysis',
+      key: 'analysis',
+      width: '33%',
+      ellipsis: true,
+      render: (text: string, record: Result) => (
+        <div
+          style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+          className="hover:bg-gray-100"
+          onClick={() => handleShowDetails(record)}
+          title={language === 'zh' ? '点击查看详情' : 'Click to view details'}
+        >
+          <Text ellipsis>{text}</Text>
+        </div>
+      )
+    },
+    {
+      title: language === 'zh' ? '蒸馏状态' : 'Distillation Status',
+      dataIndex: 'distillationStatus',
+      key: 'distillationStatus',
+      width: '12%',
+      render: (status: string) => getDistillationStatusTag(status)
+    },
+    {
+      title: language === 'zh' ? '标注状态' : 'Annotation Status',
+      dataIndex: 'annotationStatus',
+      key: 'annotationStatus',
+      width: '12%',
+      render: (status: string) => getAnnotationStatusTag(status)
+    },
+    {
+      title: language === 'zh' ? '操作' : 'Actions',
+      key: 'actions',
+      width: '10%',
+      render: (_: any, record: Result) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => handleShowDetails(record)}
+        >
+          {language === 'zh' ? '详情' : 'Details'}
         </Button>
-      </div>
+      )
+    }
+  ];
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{language === 'zh' ? '蒸馏结果' : 'Distillation Results'}</CardTitle>
-          <CardDescription>
-            {language === 'zh' 
-              ? `共找到 ${results.length} 条蒸馏结果`
-              : `Found ${results.length} distillation results`
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="w-full max-w-[1024px] mx-auto overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/3">
-                    {language === 'zh' ? 'Query' : 'Query'}
-                  </TableHead>
-                  <TableHead className="w-1/3">
-                    {language === 'zh' ? '分析结果' : 'Analysis'}
-                  </TableHead>
-                  <TableHead className="w-1/6">
-                    {language === 'zh' ? '蒸馏状态' : 'Distillation Status'}
-                  </TableHead>
-                  <TableHead className="w-1/6">
-                    {language === 'zh' ? '标注状态' : 'Annotation Status'}
-                  </TableHead>
-                  <TableHead className="w-1/12">
-                    {language === 'zh' ? '操作' : 'Actions'}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {results.map((result) => (
-                  <TableRow key={result.id}>
-                    <TableCell className="align-top">
-                      <div 
-                        className="text-sm max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:bg-accent hover:text-accent-foreground rounded px-2 py-1 transition-colors"
-                        onClick={() => handleShowDetails(result)}
-                        title={language === 'zh' ? '点击查看详情' : 'Click to view details'}
-                      >
-                        {result.query}
-                      </div>
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <div 
-                        className="text-sm max-w-[250px] overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer hover:bg-accent hover:text-accent-foreground rounded px-2 py-1 transition-colors"
-                        onClick={() => handleShowDetails(result)}
-                        title={language === 'zh' ? '点击查看详情' : 'Click to view details'}
-                      >
-                        {result.analysis}
-                      </div>
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <Badge variant="default" className="bg-green-100 text-green-800">{language === 'zh' ? '已完成' : 'Completed'}</Badge>
-                    </TableCell>
-                    <TableCell className="align-top">
-                      {getAnnotationStatusBadge(result.annotationStatus)}
-                    </TableCell>
-                    <TableCell className="align-top">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleShowDetails(result)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <span className="text-xs">{language === 'zh' ? '详情' : 'Details'}</span>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {results.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {language === 'zh' ? '暂无蒸馏结果' : 'No distillation results available'}
+  return (
+    <div style={{ padding: '24px' }}>
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Space size="middle" align="center">
+            <Button
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={onBack}
+            />
+            <div>
+              <Title level={3} style={{ margin: 0 }}>
+                {language === 'zh' ? '蒸馏结果' : 'Distillation Results'}
+              </Title>
+              <Text type="secondary">
+                {language === 'zh' ? `任务：${taskName}` : `Task: ${taskName}`}
+              </Text>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </Space>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={handleDownload}
+          >
+            {language === 'zh' ? '导出结果' : 'Export Results'}
+          </Button>
+        </div>
 
-      {/* Detail Dialog */}
-      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 rounded-none overflow-y-auto flex flex-col">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>
-              {language === 'zh' ? '详细内容' : 'Detail Content'}
-            </DialogTitle>
-            <DialogDescription>
-              {language === 'zh' ? '查看完整的Query和分析结果' : 'View complete Query and Analysis result'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 p-6">
-            {selectedDetail && (
-              <div className="space-y-6 max-w-4xl mx-auto">
-                <div>
-                  <h4 className="mb-2 font-medium">
-                    {language === 'zh' ? 'Query:' : 'Query:'}
-                  </h4>
-                  <div className="p-4 bg-muted rounded-lg">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedDetail.query}
-                    </p>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="mb-2 font-medium">
-                    {language === 'zh' ? '分析结果:' : 'Analysis:'}
-                  </h4>
-                  <div className="p-4 bg-muted rounded-lg h-[400px] overflow-y-auto">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedDetail.analysis}
-                    </p>
-                  </div>
-                </div>
-                
-                <div>
-                  <h4 className="mb-2 font-medium">
-                    {language === 'zh' ? '状态信息:' : 'Status Information:'}
-                  </h4>
-                  <div className="p-4 bg-muted rounded-lg space-y-4">
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">{language === 'zh' ? '蒸馏状态:' : 'Distillation Status:'}</h5>
-                      {getDistillationStatusBadge(selectedDetail.distillationStatus)}
-                    </div>
-                    
-                    <div>
-                      <h5 className="text-sm font-medium mb-2">{language === 'zh' ? '标注状态:' : 'Annotation Status:'}</h5>
-                      {getAnnotationStatusBadge(selectedDetail.annotationStatus)}
-                    </div>
-                  </div>
+        {/* Results Table */}
+        <Card
+          title={language === 'zh' ? '蒸馏结果' : 'Distillation Results'}
+          extra={
+            <Text type="secondary">
+              {language === 'zh'
+                ? `共找到 ${results.length} 条蒸馏结果`
+                : `Found ${results.length} distillation results`
+              }
+            </Text>
+          }
+        >
+          <Table
+            columns={columns}
+            dataSource={results}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => language === 'zh' ? `共 ${total} 条` : `Total ${total} items`
+            }}
+            locale={{
+              emptyText: language === 'zh' ? '暂无蒸馏结果' : 'No distillation results available'
+            }}
+          />
+        </Card>
+
+        {/* Detail Modal */}
+        <Modal
+          title={language === 'zh' ? '详细内容' : 'Detail Content'}
+          open={isDetailDialogOpen}
+          onCancel={() => setIsDetailDialogOpen(false)}
+          footer={[
+            <Button key="close" type="primary" onClick={() => setIsDetailDialogOpen(false)}>
+              {language === 'zh' ? '关闭' : 'Close'}
+            </Button>
+          ]}
+          width="90vw"
+          style={{ top: 20 }}
+          styles={{ body: { maxHeight: 'calc(90vh - 110px)', overflowY: 'auto' } }}
+        >
+          {selectedDetail && (
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+              <div>
+                <Title level={5} style={{ marginBottom: '8px' }}>
+                  {language === 'zh' ? 'Query:' : 'Query:'}
+                </Title>
+                <div style={{ padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                    {selectedDetail.query}
+                  </Paragraph>
                 </div>
               </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+
+              <div>
+                <Title level={5} style={{ marginBottom: '8px' }}>
+                  {language === 'zh' ? '分析结果:' : 'Analysis:'}
+                </Title>
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '4px',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  <Paragraph style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                    {selectedDetail.analysis}
+                  </Paragraph>
+                </div>
+              </div>
+
+              <div>
+                <Title level={5} style={{ marginBottom: '8px' }}>
+                  {language === 'zh' ? '状态信息:' : 'Status Information:'}
+                </Title>
+                <div style={{ padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                    <div>
+                      <Text strong style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                        {language === 'zh' ? '蒸馏状态:' : 'Distillation Status:'}
+                      </Text>
+                      {getDistillationStatusTag(selectedDetail.distillationStatus)}
+                    </div>
+
+                    <div>
+                      <Text strong style={{ fontSize: '14px', marginBottom: '8px', display: 'block' }}>
+                        {language === 'zh' ? '标注状态:' : 'Annotation Status:'}
+                      </Text>
+                      {getAnnotationStatusTag(selectedDetail.annotationStatus)}
+                    </div>
+                  </Space>
+                </div>
+              </div>
+            </Space>
+          )}
+        </Modal>
+      </Space>
     </div>
   );
 };
