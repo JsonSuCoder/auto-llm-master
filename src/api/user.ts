@@ -1,4 +1,4 @@
-import { request, setUserInfo } from "./request";
+import { request, setUserInfo, buildUrl } from "./request";
 
 export type User = {
   id?: string;
@@ -10,7 +10,7 @@ export type User = {
 };
 
 export const onLogin = async (email: string, password: string) => {
-  const data: any = await request("/users/login", {
+  const data: any = await request(buildUrl("/users/login"), {
     method: "POST",
     body: { email, password },
   });
@@ -23,20 +23,20 @@ export const onLogin = async (email: string, password: string) => {
 };
 
 export const getUsers = () => {
-  return request("/users/", {
+  return request(buildUrl("/users/"), {
     method: "GET",
   });
 };
 
 export const createUser = (user: User): Promise<any> => {
-  return request("/users", {
+  return request(buildUrl("/users"), {
     method: "POST",
     body: user,
   });
 };
 
 export const deleteUser = (userId: string): Promise<any> => {
-  return request(`/users/${userId}`, {
+  return request(buildUrl(`/users/${userId}`), {
     method: "DELETE",
   });
 };
@@ -45,7 +45,7 @@ export const updateUser = (
   userId: string,
   updatedUserData: any
 ): Promise<any> => {
-  return request(`/users/${userId}`, {
+  return request(buildUrl(`/users/${userId}`), {
     method: "PUT",
     body: updatedUserData,
   });

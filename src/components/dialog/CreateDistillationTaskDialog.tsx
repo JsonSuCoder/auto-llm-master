@@ -101,9 +101,9 @@ const CreateDistillationTaskDialog: React.FC<CreateDistillationTaskDialogProps> 
       open={isOpen}
       onCancel={handleClose}
       onOk={handleSubmit}
-      width="100vw"
-      style={{ top: 0, maxWidth: '100vw', paddingBottom: 0 }}
-      styles={{ body: { height: 'calc(100vh - 110px)', overflowY: 'auto' } }}
+      width="80vw"
+      style={{ maxWidth: '100vw', maxHeight: '80vh', paddingBottom: 0 }}
+      // styles={{ body: { height: 'calc(100vh - 110px)', overflowY: 'auto' } }}
       okText={t('createTask', language)}
       cancelText={t('cancel', language)}
     >
@@ -200,9 +200,11 @@ const CreateDistillationTaskDialog: React.FC<CreateDistillationTaskDialogProps> 
           <Text strong style={{ marginBottom: '8px', display: 'block' }}>
             {language === 'zh' ? '蒸馏Prompt' : 'Distillation Prompt'}
           </Text>
-          <div className='bg-[#f5f5f5] p-[10px]'>
-            {distillationPrompt}
-          </div>
+          {distillationPrompt && (
+            <div className='bg-[#f5f5f5] p-[10px]'>
+              {distillationPrompt}
+            </div>
+          )}
           <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
             {language === 'zh'
               ? '此Prompt将用于指导AI模型进行数据蒸馏，生成高质量的训练数据'

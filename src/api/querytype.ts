@@ -1,4 +1,4 @@
-import { request } from "./request";
+import { request, buildUrl } from "./request";
 
 export interface QueryTypeItem {
   id?: string;
@@ -15,33 +15,33 @@ export interface QueryTypeItem {
 }
 
 export const getQueryTypes = ({ page, size }: { page: number; size: number }) => {
-  return request(`/querytypes?page=${page}&size=${size}`, {
+  return request(buildUrl(`/querytypes?page=${page}&size=${size}`), {
     method: "GET",
   });
 };
 
 export const getAllQueryTypes = () => {
-  return request("/querytypes/all", {
+  return request(buildUrl("/querytypes/all"), {
     method: "GET",
   });
 };
 
 export const createQueryTypes = (query: QueryTypeItem) => {
-  return request("/querytypes", {
+  return request(buildUrl("/querytypes"), {
     method: "POST",
     body: query,
   });
 };
 
 export const updateQueryTypes = (queryId: string, updatedQueryData: any) => {
-  return request(`/querytypes/${queryId}`, {
+  return request(buildUrl(`/querytypes/${queryId}`), {
     method: "PUT",
     body: updatedQueryData,
   });
 };
 
 export const deleteQueryTypes = (queryId: string) => {
-  return request(`/querytypes/${queryId}`, {
+  return request(buildUrl(`/querytypes/${queryId}`), {
     method: "DELETE",
   });
 };

@@ -1,7 +1,7 @@
-import { request } from "./request";
+import { request, buildUrl } from "./request";
 
 export const getScenes = () => {
-  return request("/scenes", {
+  return request(buildUrl("/scenes"), {
     method: "GET",
   });
 };

@@ -4,6 +4,7 @@ import { CheckOutlined, CloseOutlined, EyeOutlined, StarOutlined, ThunderboltOut
 import { useEffect, useState } from "react";
 import { getQueries, patchQueryStatus } from "../api/queries";
 import QueryDetailDialog from "./dialog/QueryDetailDialog";
+import { formatPostgresTimestamp } from "../utils/util";
 
 interface QueryProductionProps {
     language: Language;
@@ -186,6 +187,7 @@ export const QueryProductionResults: React.FC<QueryProductionProps> = ({ languag
             dataIndex: 'created_at',
             key: 'created_at',
             width: 160,
+            render: (time:string) => <span style={{ color: '#666' }}>{formatPostgresTimestamp(time)}</span>
         },
         {
             title: t('actions', language),

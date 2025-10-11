@@ -1,4 +1,4 @@
-import { request } from "./request";
+import { request, buildUrl } from "./request";
 export const getQueries = ({
   page,
   size,
@@ -8,18 +8,18 @@ export const getQueries = ({
   size: number;
   manual_confirmed: string;
 }) => {
-  let requestUrl = `/queries?page=${page}&size=${size}`;
+  let endpoint = `/queries?page=${page}&size=${size}`;
   if (manual_confirmed) {
-    requestUrl += `&manual_confirmed=${manual_confirmed}`;
+    endpoint += `&manual_confirmed=${manual_confirmed}`;
   }
 
-  return request(requestUrl, {
+  return request(buildUrl(endpoint), {
     method: "GET",
   });
 };
 
 export const patchQueryStatus = (id: string, status: string) => {
-  return request(`/queries/${id}/manual-confirmed`, {
+  return request(buildUrl(`/queries/${id}/manual-confirmed`), {
     method: "PATCH",
     body: {
       manual_confirmed:status,
@@ -29,8 +29,8 @@ export const patchQueryStatus = (id: string, status: string) => {
 
 // 生成queries
 
-export const createQueries = (queries: any) => {
-  return request("/queries", {
+export const generateQueries = (queries: any) => {
+  return request('https://llm.sending.network/generate/generate-queries', {
     method: "POST",
     body: queries,
   });

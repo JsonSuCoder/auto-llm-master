@@ -149,27 +149,27 @@ export const AnnotationResults: React.FC<AnnotationResultsProps> = ({
 
   const results = annotationResults[taskId] || [];
 
-  const handleDownload = () => {
-    const csvContent = [
-      ['Query', 'Analysis Result', 'Distillation Status', 'Annotation Status', 'Annotated By', 'Annotated At'],
-      ...results.map(result => [
-        result.query,
-        result.analysisResult,
-        result.distillationStatus,
-        result.annotationStatus,
-        result.annotatedBy || '',
-        result.annotatedAt || ''
-      ])
-    ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+  // const handleDownload = () => {
+  //   const csvContent = [
+  //     ['Query', 'Analysis Result', 'Distillation Status', 'Annotation Status', 'Annotated By', 'Annotated At'],
+  //     ...results.map(result => [
+  //       result.query,
+  //       result.analysisResult,
+  //       result.distillationStatus,
+  //       result.annotationStatus,
+  //       result.annotatedBy || '',
+  //       result.annotatedAt || ''
+  //     ])
+  //   ].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `annotation-results-${taskName.replace(/\s+/g, '-').toLowerCase()}.csv`;
-    link.click();
+  //   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  //   const link = document.createElement('a');
+  //   link.href = URL.createObjectURL(blob);
+  //   link.download = `annotation-results-${taskName.replace(/\s+/g, '-').toLowerCase()}.csv`;
+  //   link.click();
 
-    message.success(language === 'zh' ? '导出成功' : 'Export successful');
-  };
+  //   message.success(language === 'zh' ? '导出成功' : 'Export successful');
+  // };
 
   const columns = [
     {
@@ -247,13 +247,13 @@ export const AnnotationResults: React.FC<AnnotationResultsProps> = ({
               </Text>
             </div>
           </Space>
-          <Button
+          {/* <Button
             type="primary"
             icon={<DownloadOutlined />}
             onClick={handleDownload}
           >
             {language === 'zh' ? '导出结果' : 'Export Results'}
-          </Button>
+          </Button> */}
         </div>
 
         {/* Results Table */}

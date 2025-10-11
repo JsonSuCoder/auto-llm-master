@@ -20,12 +20,12 @@ interface RequestOptions {
 
 /**
  * Common HTTP request function with automatic authentication header injection
- * @param endpoint - API endpoint (without base URL)
+ * @param url - Full URL for the request
  * @param options - Request options
  * @returns Promise with response data
  */
 export const request = async <T = any>(
-  endpoint: string,
+  url: string,
   options: RequestOptions = {}
 ): Promise<T> => {
   const { method = "GET", body, headers = {} } = options;
@@ -65,7 +65,7 @@ export const request = async <T = any>(
   }
 
   try {
-    const response = await fetch(`${SEVER_URL}${endpoint}`, config);
+    const response = await fetch(url, config);
     const data = await response.json();
 
     return data;
@@ -73,4 +73,13 @@ export const request = async <T = any>(
     console.error("Request error:", error);
     throw error;
   }
+};
+
+/**
+ * Helper function to build full URL with server base URL
+ * @param endpoint - API endpoint path
+ * @returns Full URL
+ */
+export const buildUrl = (endpoint: string): string => {
+  return `${SEVER_URL}${endpoint}`;
 };
