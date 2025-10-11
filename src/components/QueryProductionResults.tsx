@@ -4,6 +4,7 @@ import { CheckOutlined, CloseOutlined, EyeOutlined, StarOutlined, ThunderboltOut
 import { useEffect, useState } from "react";
 import { getQueries, patchQueryStatus } from "../api/queries";
 import QueryDetailDialog from "./dialog/QueryDetailDialog";
+import BatchEvaluateDialog from "./dialog/BatchEvaluateDialog";
 import { formatPostgresTimestamp } from "../utils/util";
 
 interface QueryProductionProps {
@@ -37,6 +38,7 @@ export const QueryProductionResults: React.FC<QueryProductionProps> = ({ languag
     const [loading, setLoading] = useState(false);
     const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
     const [selectedQuery, setSelectedQuery] = useState<QueryType | null>(null);
+    const [isBatchEvaluateDialogOpen, setIsBatchEvaluateDialogOpen] = useState(false);
 
     // 获取查询列表
     const fetchQueries = async (page: number, size: number, status: string) => {
@@ -127,7 +129,13 @@ export const QueryProductionResults: React.FC<QueryProductionProps> = ({ languag
 
     // 一键评判功能
     const handleBatchEvaluate = () => {
+        setIsBatchEvaluateDialogOpen(true);
+    };
 
+    // 批量评分成功回调
+    const handleBatchEvaluateSuccess = () => {
+        // 刷新查询列表
+        fetchQueries(currentPage, pageSize, filterStatus);
     };
 
     // 查看详情
@@ -283,6 +291,14 @@ export const QueryProductionResults: React.FC<QueryProductionProps> = ({ languag
                 isOpen={isDetailDialogOpen}
                 onClose={() => setIsDetailDialogOpen(false)}
                 queryData={selectedQuery}
+                language={language}
+            />
+
+            {/* 批量评分弹窗 */}
+            <BatchEvaluateDialog
+                isOpen={isBatchEvaluateDialogOpen}
+                onClose={() => setIsBatchEvaluateDialogOpen(false)}
+                onSuccess={handleBatchEvaluateSuccess}
                 language={language}
             />
         </div>

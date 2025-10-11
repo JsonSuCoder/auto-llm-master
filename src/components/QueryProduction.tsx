@@ -69,7 +69,9 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
     generateQueries({
       "query_type_id": selectedQueryType.id,
       "query_count": generateCount
-
+    }).then(res => {
+      setIsGenerating(false);
+      message.success(t('queryGenerationSuccess', language));
     })
 
   };
