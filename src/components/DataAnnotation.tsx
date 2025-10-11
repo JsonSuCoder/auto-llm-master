@@ -11,9 +11,7 @@ import {
 } from 'antd';
 import {
   TagOutlined,
-  PlayCircleOutlined,
   PauseCircleOutlined,
-  DownloadOutlined,
   EyeOutlined,
   DeleteOutlined,
   ClockCircleOutlined,
@@ -107,43 +105,8 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
     }
   ]);
 
-  const handleTaskAction = (taskId: number, action: string) => {
-    if (action === 'start') {
-      // 对于待开始的任务，直接跳转到标注结果页面
-      const task = tasks.find(t => t.id === taskId);
-      if (task && task.status === 'pending') {
-        handleViewResults(taskId, task.type);
-        return;
-      }
-    }
-
-    setTasks(tasks.map(task => {
-      if (task.id === taskId) {
-        switch (action) {
-          case 'start':
-            return {
-              ...task,
-              status: 'running',
-              startTime: new Date().toLocaleString()
-            };
-          case 'pause':
-            return { ...task, status: 'paused' };
-          case 'resume':
-            return { ...task, status: 'running' };
-          case 'delete':
-            return null;
-          default:
-            return task;
-        }
-      }
-      return task;
-    }).filter(Boolean) as Task[]);
-
-    if (action === 'delete') {
-      antdMessage.success(language === 'zh' ? '任务已删除' : 'Task deleted');
-    } else {
-      antdMessage.success(language === 'zh' ? '操作成功' : 'Operation successful');
-    }
+  const handleDeleteTask = (taskId: number) => {
+   
   };
 
   const getStatusTag = (status: string) => {
@@ -262,48 +225,16 @@ export const DataAnnotation: React.FC<DataAnnotationProps> = ({ language }) => {
       align: 'right' as const,
       render: (_: any, record: Task) => (
         <Space size="small">
-          {record.status === 'pending' && (
-            <Button
-              type="text"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handleTaskAction(record.id, 'start')}
-            />
-          )}
-          {record.status === 'running' && (
-            <Button
-              type="text"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handleViewResults(record.id, record.type)}
-            />
-          )}
-          {record.status === 'paused' && (
-            <Button
-              type="text"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handleTaskAction(record.id, 'resume')}
-            />
-          )}
-          {record.status === 'completed' && (
-            <>
-              <Button
-                type="text"
-                icon={<EyeOutlined />}
-                onClick={() => handleViewResults(record.id, record.type)}
-              />
-              <Button
-                type="text"
-                icon={<DownloadOutlined />}
-                onClick={() => {
-                  antdMessage.success(language === 'zh' ? '正在下载结果...' : 'Downloading results...');
-                }}
-              />
-            </>
-          )}
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            onClick={() => handleViewResults(record.id, record.type)}
+          />
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleTaskAction(record.id, 'delete')}
+            onClick={() => handleDeleteTask(record.id)}
           />
         </Space>
       )

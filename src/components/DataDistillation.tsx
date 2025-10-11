@@ -126,21 +126,6 @@ export const DataDistillation: React.FC<DataDistillationProps> = ({ language, on
     antdMessage.success(t('taskCreated', language));
   };
 
-  const handleStartTask = (taskId: number) => {
-    setTasks(tasks.map(task =>
-      task.id === taskId
-        ? {
-            ...task,
-            status: 'running',
-            startTime: new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US'),
-            estimatedTime: Math.ceil(task.queryCount / 10)
-          }
-        : task
-    ));
-    antdMessage.success(t('taskStarted', language));
-
-    simulateTaskProgress(taskId);
-  };
 
   const handleViewResults = (taskId: number) => {
     const task = tasks.find(t => t.id === taskId);
@@ -149,60 +134,9 @@ export const DataDistillation: React.FC<DataDistillationProps> = ({ language, on
     }
   };
 
-  const simulateTaskProgress = (taskId: number) => {
-    const interval = setInterval(() => {
-      setTasks(currentTasks => {
-        const updatedTasks = currentTasks.map(task => {
-          if (task.id === taskId && task.status === 'running') {
-            const newProgress = Math.min(task.progress + Math.random() * 10, 100);
-            const newResultCount = Math.floor((newProgress / 100) * task.queryCount);
-
-            if (newProgress >= 100) {
-              clearInterval(interval);
-              return {
-                ...task,
-                progress: 100,
-                resultCount: newResultCount,
-                status: 'completed',
-                endTime: new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US'),
-                estimatedTime: null
-              };
-            }
-
-            return {
-              ...task,
-              progress: newProgress,
-              resultCount: newResultCount,
-              estimatedTime: task.estimatedTime ? Math.max(0, task.estimatedTime - 1) : null
-            };
-          }
-          return task;
-        });
-
-        return updatedTasks;
-      });
-    }, 2000);
-  };
-
-  const handlePauseTask = (taskId: number) => {
-    setTasks(tasks.map(task =>
-      task.id === taskId
-        ? { ...task, status: 'paused' }
-        : task
-    ));
-    antdMessage.success(t('taskPaused', language));
-  };
-
   const handleDeleteTask = (taskId: number) => {
     setTasks(tasks.filter(task => task.id !== taskId));
     antdMessage.success(t('taskDeleted', language));
-  };
-
-  const handleExportResults = (taskId: number) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      antdMessage.success(t('exportingResults', language, { name: task.name }));
-    }
   };
 
   const getStatusTag = (status: string) => {
@@ -304,34 +238,13 @@ export const DataDistillation: React.FC<DataDistillationProps> = ({ language, on
       align: 'right' as const,
       render: (_: any, record: Task) => (
         <Space size="small">
-          {record.status === 'pending' && (
-            <Button
-              type="text"
-              icon={<PlayCircleOutlined />}
-              onClick={() => handleStartTask(record.id)}
-            />
-          )}
-          {record.status === 'running' && (
-            <Button
-              type="text"
-              icon={<PauseCircleOutlined />}
-              onClick={() => handlePauseTask(record.id)}
-            />
-          )}
           {record.status === 'completed' && (
-            <>
-              <Button
-                type="text"
-                icon={<DownloadOutlined />}
-                onClick={() => handleExportResults(record.id)}
-              />
               <Button
                 type="text"
                 icon={<EyeOutlined />}
                 onClick={() => handleViewResults(record.id)}
                 disabled={record.status !== 'completed'}
               />
-            </>
           )}
           <Button
             type="text"
