@@ -9,7 +9,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, SettingOutl
 import { message } from 'antd';
 import { Language, t } from '../utils/translations';
 import QueryTypeDialog from './dialog/QueryTypeDialog';
-import { QueryTypeItem, getQueryTypes, createQueryTypes, updateQueryTypes, deleteQueryTypes } from '../api/query';
+import { QueryTypeItem, getQueryTypes, createQueryTypes, updateQueryTypes, deleteQueryTypes } from '../api/querytype';
 
 interface QueryTypeManagementProps {
   language: Language;

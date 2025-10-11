@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Select, InputNumber, Space, Typography, Input, message } from 'antd';
 import { Language, t } from '../../utils/translations';
-import { QueryTypeItem, getAllQueryTypes } from '../../api/query';
+import { QueryTypeItem, getAllQueryTypes } from '../../api/querytype';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;

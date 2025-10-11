@@ -5,7 +5,10 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "Read(//Users/qmk/work/data-fine-tuning/app/models/**)",
-      "Read(//Users/qmk/work/data-fine-tuning/**)"
+      "Read(//Users/qmk/work/data-fine-tuning/**)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

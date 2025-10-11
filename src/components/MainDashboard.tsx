@@ -24,6 +24,7 @@ import { DistillationResults } from './DistillationResults';
 // import { ThemeToggle } from './ThemeToggle';
 import { LanguageToggle } from './LanguageToggle';
 import { Language, t } from '../utils/translations';
+import { QueryProductionResults } from './QueryProductionResults';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -57,6 +58,7 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({
     { key: 'users', label: t('userManagement', language), icon: <UserOutlined />, permission: 'admin' },
     { key: 'query-types', label: t('queryTypeManagement', language), icon: <SettingOutlined />, permission: null },
     { key: 'query-production', label: t('queryProduction', language), icon: <FileTextOutlined />, permission: null },
+    { key: 'query-production-results', label: t('queryProductionResults', language), icon: <FileTextOutlined />, permission: null },
     { key: 'data-distillation', label: t('dataDistillation', language), icon: <DatabaseOutlined />, permission: null },
     { key: 'data-annotation', label: t('dataAnnotation', language), icon: <TagOutlined />, permission: null },
     { key: 'blind-evaluation', label: t('blindEvaluation', language), icon: <EyeOutlined />, permission: null }
@@ -84,6 +86,8 @@ export const MainDashboard: React.FC<MainDashboardProps> = ({
         return <QueryTypeManagement language={language} />;
       case 'query-production':
         return <QueryProduction language={language} />;
+      case 'query-production-results':
+        return <QueryProductionResults language={language} />;
       case 'data-distillation':
         return <DataDistillation language={language} onViewResults={handleViewDistillationResults} />;
       case 'data-annotation':

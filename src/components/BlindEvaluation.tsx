@@ -7,7 +7,6 @@ import {
   Tag,
   Space,
   Typography,
-  Tabs,
   Radio,
   message as antdMessage
 } from 'antd';
@@ -18,7 +17,8 @@ import {
   CheckCircleOutlined,
   LeftOutlined,
   RightOutlined,
-  SaveOutlined
+  SaveOutlined,
+  ArrowLeftOutlined
 } from '@ant-design/icons';
 import { Language, t } from '../utils/translations';
 
@@ -58,8 +58,11 @@ interface EvaluationResult {
   categoryEn: string;
 }
 
+type ViewType = 'task-list' | 'workbench' | 'results';
+
 export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) => {
-  const [activeTab, setActiveTab] = useState('task-list');
+  const [currentView, setCurrentView] = useState<ViewType>('task-list');
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   const [evaluationTasks] = useState<EvaluationTask[]>([
     {
@@ -206,6 +209,21 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
     }
   };
 
+  const handleStartEvaluation = (taskId: number) => {
+    setSelectedTaskId(taskId);
+    setCurrentView('workbench');
+  };
+
+  const handleViewResults = (taskId: number) => {
+    setSelectedTaskId(taskId);
+    setCurrentView('results');
+  };
+
+  const handleBackToTaskList = () => {
+    setCurrentView('task-list');
+    setSelectedTaskId(null);
+  };
+
   const taskColumns = [
     {
       title: language === 'zh' ? '任务信息' : 'Task Info',
@@ -277,26 +295,21 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
         <Space size="small">
           {(record.status === 'pending' || record.status === 'running') && (
             <Button
-              type="text"
+              type="primary"
               icon={<PlayCircleOutlined />}
-              onClick={() => setActiveTab('workbench')}
-            />
+              onClick={() => handleStartEvaluation(record.id)}
+            >
+              {language === 'zh' ? '开始' : 'Start'}
+            </Button>
           )}
           {record.status === 'completed' && (
-            <>
-              <Button
-                type="text"
-                icon={<DownloadOutlined />}
-                onClick={() => {
-                  antdMessage.success(language === 'zh' ? '正在下载结果...' : 'Downloading results...');
-                }}
-              />
-              <Button
-                type="text"
-                icon={<EyeOutlined />}
-                onClick={() => setActiveTab('results')}
-              />
-            </>
+            <Button
+              type="default"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewResults(record.id)}
+            >
+              {language === 'zh' ? '查看结果' : 'View Results'}
+            </Button>
           )}
         </Space>
       )
@@ -371,6 +384,13 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
 
   const renderWorkbenchTab = () => (
     <div style={{ padding: '24px 0' }}>
+      <Button
+        icon={<ArrowLeftOutlined />}
+        onClick={handleBackToTaskList}
+        style={{ marginBottom: '16px' }}
+      >
+        {language === 'zh' ? '返回任务列表' : 'Back to Task List'}
+      </Button>
       <Card
         title={t('evaluatorWorkbench', language)}
         extra={
@@ -484,6 +504,13 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
 
   const renderResultsTab = () => (
     <div style={{ padding: '24px 0' }}>
+      <Button
+        icon={<ArrowLeftOutlined />}
+        onClick={handleBackToTaskList}
+        style={{ marginBottom: '16px' }}
+      >
+        {language === 'zh' ? '返回任务列表' : 'Back to Task List'}
+      </Button>
       <Card
         title={t('evaluationResults', language)}
         extra={
@@ -525,38 +552,17 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
     </div>
   );
 
-  const tabItems = [
-    {
-      key: 'task-list',
-      label: (
-        <span>
-          <EyeOutlined />
-          {language === 'zh' ? ' 盲评任务列表' : ' Evaluation Task List'}
-        </span>
-      ),
-      children: renderTaskListTab()
-    },
-    {
-      key: 'workbench',
-      label: (
-        <span>
-          <PlayCircleOutlined />
-          {' '}{t('evaluationWorkbench', language)}
-        </span>
-      ),
-      children: renderWorkbenchTab()
-    },
-    {
-      key: 'results',
-      label: (
-        <span>
-          <DownloadOutlined />
-          {' '}{t('evaluationResults', language)}
-        </span>
-      ),
-      children: renderResultsTab()
+  const renderContent = () => {
+    switch (currentView) {
+      case 'workbench':
+        return renderWorkbenchTab();
+      case 'results':
+        return renderResultsTab();
+      case 'task-list':
+      default:
+        return renderTaskListTab();
     }
-  ];
+  };
 
   return (
     <div style={{ padding: '24px' }}>
@@ -571,7 +577,7 @@ export const BlindEvaluation: React.FC<BlindEvaluationProps> = ({ language }) =>
         </Paragraph>
       </div>
 
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+      {renderContent()}
     </div>
   );
 };

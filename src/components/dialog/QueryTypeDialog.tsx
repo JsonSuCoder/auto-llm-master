@@ -3,7 +3,7 @@ import { Modal, Button, Input, Form, Tabs, Select } from 'antd';
 import { Language, t } from '../../utils/translations';
 import { PlusOutlined } from '@ant-design/icons';
 import { getScenes } from '../../api/scenes';
-import { QueryTypeItem } from '../../api/query';
+import { QueryTypeItem } from '../../api/querytype';
 
 const { TextArea } = Input;
 const { TabPane } = Tabs;

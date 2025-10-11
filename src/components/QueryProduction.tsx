@@ -1,28 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Input, Select, Tabs, Progress, Table, Badge, message } from 'antd';
-import { PlusOutlined, UploadOutlined, FileTextOutlined, SearchOutlined, EditOutlined, CheckOutlined, CloseOutlined, StarOutlined, ExclamationCircleOutlined, DownloadOutlined, FilterOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { Card, Button, Input, Select, Tabs, Progress, message } from 'antd';
+import { PlusOutlined, UploadOutlined, FileTextOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { Language, t } from '../utils/translations';
 import QueryProductionDialog from './dialog/QueryProductionDialog';
-import { getAllQueryTypes, QueryTypeItem } from '../api/query';
-
-const { TextArea } = Input;
+import { getAllQueryTypes, QueryTypeItem } from '../api/querytype';
 const { TabPane } = Tabs;
 const { Option } = Select;
 
 interface QueryProductionProps {
   language: Language;
-}
-
-// 定义查询类型接口
-interface QueryType {
-  id: number;
-  type: string;
-  content: string;
-  score: number | null;
-  status: string;
-  autoEvaluated: boolean;
-  createdAt: string;
-  confirmedBy: string | null;
 }
 
 export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) => {
@@ -32,14 +18,6 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
   const [queryTypes, setQueryTypes] = useState<QueryTypeItem[]>([]);
   const [selectedQueryType, setSelectedQueryType] = useState<QueryTypeItem | null>(null);
   const [loadingQueryTypes, setLoadingQueryTypes] = useState(false);
-
-  // 编辑相关状态
-  const [isEditingGuidance, setIsEditingGuidance] = useState(false);
-  const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const [isEditingQuality, setIsEditingQuality] = useState(false);
-  const [editGuidanceText, setEditGuidanceText] = useState('');
-  const [editPromptText, setEditPromptText] = useState('');
-  const [editQualityText, setEditQualityText] = useState('');
 
   // 存储当前内容
   const [currentGuidance, setCurrentGuidance] = useState(
@@ -58,23 +36,8 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
       : '• Questions are clear and unambiguous\n• Answers are accurate and complete\n• Language is natural and fluent'
   );
 
-  const [queries, setQueries] = useState<QueryType[]>([
-    {
-      id: 1,
-      type: language === 'zh' ? 'QT002+趋势研判' : 'QT002+Trend Analysis',
-      content: 'Which narrative track does this token align with, and how does it compare against peers in the sector?',
-      score: 8.5,
-      status: 'confirmed',
-      autoEvaluated: true,
-      createdAt: '2024-03-15 14:30',
-      confirmedBy: language === 'zh' ? '张三' : 'Zhang San'
-    },
-  ]);
-
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateCount, setGenerateCount] = useState(100);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newQuery, setNewQuery] = useState('');
 
@@ -110,14 +73,6 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
       setCurrentQuality(queryType.qualityStandard || '');
     }
   };
-
-  const filteredQueries = queries.filter(query => {
-    const matchesSearch = query.content.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || query.status === filterStatus;
-    const matchesType = !selectedType || query.type === selectedType;
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
   const handleGenerateQueries = async () => {
     if (!selectedType || !selectedQueryType) {
       message.error(language === 'zh' ? '请选择Query类型编号' : 'Please select a Query type code');
@@ -126,25 +81,6 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
 
     setIsGenerating(true);
 
-    // 模拟生成过程
-    setTimeout(() => {
-      const newQueries = Array.from({ length: generateCount }, (_, index) => ({
-        id: queries.length + index + 1,
-        type: selectedType,
-        content: language === 'zh'
-          ? `自动生成的${selectedType}内容 ${index + 1}`
-          : `Auto-generated ${selectedType} content ${index + 1}`,
-        score: Math.random() * 4 + 6, // 6-10分
-        status: Math.random() > 0.3 ? 'pending' : 'rejected',
-        autoEvaluated: false,
-        createdAt: new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US'),
-        confirmedBy: null
-      }));
-
-      setQueries([...queries, ...newQueries]);
-      setIsGenerating(false);
-      message.success(t('generateSuccess', language, { count: generateCount.toString() }));
-    }, 3000);
   };
 
   const handleAddQuery = () => {
@@ -152,184 +88,7 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
       message.error(language === 'zh' ? '请选择Query类型并输入内容' : 'Please select Query type and enter content');
       return;
     }
-
-    const query: QueryType = {
-      id: queries.length + 1,
-      type: selectedType,
-      content: newQuery,
-      score: null,
-      status: 'draft',
-      autoEvaluated: false,
-      createdAt: new Date().toLocaleString(language === 'zh' ? 'zh-CN' : 'en-US'),
-      confirmedBy: null
-    };
-
-    setQueries([...queries, query]);
-    setNewQuery('');
-    setIsAddDialogOpen(false);
-    message.success(t('queryAddSuccess', language));
   };
-
-  const handleConfirmQuery = (queryId: number) => {
-    setQueries(queries.map(query =>
-      query.id === queryId
-        ? { ...query, status: 'confirmed', confirmedBy: language === 'zh' ? '当前用户' : 'Current User' }
-        : query
-    ));
-    message.success(t('queryConfirmed', language));
-  };
-
-  const handleRejectQuery = (queryId: number) => {
-    setQueries(queries.map(query =>
-      query.id === queryId
-        ? { ...query, status: 'rejected' }
-        : query
-    ));
-    message.success(t('queryRejected', language));
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge color="green" text={t('confirmed', language)} />;
-      case 'pending':
-        return <Badge color="gold" text={t('pending', language)} />;
-      case 'rejected':
-        return <Badge color="red" text={t('rejected', language)} />;
-      case 'draft':
-        return <Badge color="default" text={language === 'zh' ? '草稿' : 'Draft'} />;
-      default:
-        return <Badge color="blue" text={status} />;
-    }
-  };
-
-  const getScoreBadge = (score: number | null): JSX.Element | null => {
-    if (!score) return null;
-    const color = score >= 8 ? 'green' : score >= 7 ? 'gold' : 'red';
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: color === 'green' ? '#52c41a' : color === 'gold' ? '#faad14' : '#f5222d' }}>
-        <StarOutlined style={{ fontSize: '12px' }} />
-        <span style={{ fontSize: '12px', fontWeight: 500 }}>{score.toFixed(1)}</span>
-      </div>
-    );
-  };
-
-
-  const handleSaveGuidance = () => {
-    setCurrentGuidance(editGuidanceText);
-    setIsEditingGuidance(false);
-    message.success(language === 'zh' ? '生产指引已更新' : 'Guidance updated successfully');
-  };
-
-  const handleSavePrompt = () => {
-    setCurrentPrompt(editPromptText);
-    setIsEditingPrompt(false);
-    message.success(language === 'zh' ? '提示语模板已更新' : 'Prompt template updated successfully');
-  };
-
-  const handleSaveQuality = () => {
-    setCurrentQuality(editQualityText);
-    setIsEditingQuality(false);
-    message.success(language === 'zh' ? '质量标准已更新' : 'Quality standard updated successfully');
-  };
-
-  // 一键评判功能
-  const handleBatchEvaluate = () => {
-    const unevaluatedQueries = queries.filter(query => !query.autoEvaluated);
-
-    if (unevaluatedQueries.length === 0) {
-      message.info(language === 'zh' ? '所有Query已完成自动评判' : 'All queries have been auto-evaluated');
-      return;
-    }
-
-    message.info(language === 'zh' ? `开始评判${unevaluatedQueries.length}条Query...` : `Starting evaluation of ${unevaluatedQueries.length} queries...`);
-
-    // 模拟批量评判过程
-    setTimeout(() => {
-      setQueries(prevQueries =>
-        prevQueries.map(query =>
-          !query.autoEvaluated
-            ? {
-              ...query,
-              autoEvaluated: true,
-              score: query.score || Math.random() * 4 + 6 // 6-10分
-            }
-            : query
-        )
-      );
-
-      message.success(language === 'zh' ? `成功完成${unevaluatedQueries.length}条Query的自动评判` : `Successfully completed auto-evaluation of ${unevaluatedQueries.length} queries`);
-    }, 2000);
-  };
-
-  // 表格列定义
-  const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 60,
-    },
-    {
-      title: t('type', language),
-      dataIndex: 'type',
-      key: 'type',
-      width: 180,
-    },
-    {
-      title: t('content', language),
-      dataIndex: 'content',
-      key: 'content',
-      ellipsis: true,
-    },
-    {
-      title: t('score', language),
-      dataIndex: 'score',
-      key: 'score',
-      width: 80,
-      render: (score: number | null) => getScoreBadge(score),
-    },
-    {
-      title: t('status', language),
-      dataIndex: 'status',
-      key: 'status',
-      width: 120,
-      render: (status: string) => getStatusBadge(status),
-    },
-    {
-      title: t('createdAt', language),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 160,
-    },
-    {
-      title: t('actions', language),
-      key: 'actions',
-      width: 120,
-      render: (_: any, record: QueryType) => (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {record.status !== 'confirmed' && (
-            <Button
-              type="text"
-              icon={<CheckOutlined />}
-              size="small"
-              onClick={() => handleConfirmQuery(record.id)}
-              style={{ color: '#52c41a' }}
-            />
-          )}
-          {record.status !== 'rejected' && (
-            <Button
-              type="text"
-              icon={<CloseOutlined />}
-              size="small"
-              onClick={() => handleRejectQuery(record.id)}
-              style={{ color: '#f5222d' }}
-            />
-          )}
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div className='p-[24px] flex flex-col gap-[24px]'>
@@ -511,52 +270,6 @@ export const QueryProduction: React.FC<QueryProductionProps> = ({ language }) =>
           </Tabs>
         </Card>
       )}
-
-      {/* 查询列表 */}
-      <Card
-        title={t('queryList', language)}
-        extra={
-          <Button
-            type="primary"
-            icon={<ThunderboltOutlined />}
-            onClick={handleBatchEvaluate}
-          >
-            {t('batchEvaluate', language)}
-          </Button>
-        }
-      >
-        <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-          <Input
-            placeholder={t('searchQuery', language)}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ width: '300px' }}
-            prefix={<SearchOutlined />}
-          />
-          <Select
-            value={filterStatus}
-            onChange={(value) => setFilterStatus(value)}
-            style={{ width: '150px' }}
-          >
-            <Option value="all">{t('allStatus', language)}</Option>
-            <Option value="confirmed">{t('confirmed', language)}</Option>
-            <Option value="pending">{t('pending', language)}</Option>
-            <Option value="rejected">{t('rejected', language)}</Option>
-            <Option value="draft">{language === 'zh' ? '草稿' : 'Draft'}</Option>
-          </Select>
-        </div>
-
-        <Table
-          dataSource={filteredQueries}
-          columns={columns}
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `${t('total', language)}: ${total}`,
-          }}
-        />
-      </Card>
 
       {/* 添加查询对话框 */}
       <QueryProductionDialog
